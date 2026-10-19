@@ -15,6 +15,7 @@
     sessionStatuses: new Map(), // sessionId -> 'thinking' | 'done' | 'error' | 'waiting'
     desktopBounds: new Map(),   // sessionId -> { x, y, w, h }
     desktopIconPositions: new Map(), // sessionId -> { x, y } (Draggable Minimized Icons)
+    customAgents: [],           // User-defined saved custom agents from localStorage
     topZIndex: 10,
     broadcastOpen: true
   };
@@ -49,6 +50,9 @@
     customAgentForm: document.getElementById('customAgentForm'),
     closeCustomModalBtn: document.getElementById('closeCustomModalBtn'),
     cancelCustomModalBtn: document.getElementById('cancelCustomModalBtn'),
+    saveOnlyCustomModalBtn: document.getElementById('saveOnlyCustomModalBtn'),
+    launchCustomModalBtn: document.getElementById('launchCustomModalBtn'),
+    customSavePreset: document.getElementById('customSavePreset'),
     customCommandInput: document.getElementById('customCommandInput'),
     customArgsInput: document.getElementById('customArgsInput'),
     customNameInput: document.getElementById('customNameInput'),
@@ -59,6 +63,7 @@
    * Initialize App
    */
   async function init() {
+    loadCustomAgents();
     setupEventListeners();
     setupKeyboardShortcuts();
     setupContainerScrollHandling();
@@ -117,12 +122,65 @@
   }
 
   /**
+   * Load User Saved Custom Agents from localStorage
+   */
+  function loadCustomAgents() {
+    try {
+      const stored = localStorage.getItem('bek_cluster_custom_agents');
+      if (stored) {
+        state.customAgents = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Failed to parse custom agents from localStorage:', e);
+      state.customAgents = [];
+    }
+  }
+
+  /**
+   * Save a Custom Agent to Presets
+   */
+  function saveCustomAgent(agentData) {
+    const existingIndex = state.customAgents.findIndex(a => a.id === agentData.id);
+    if (existingIndex >= 0) {
+      state.customAgents[existingIndex] = agentData;
+    } else {
+      state.customAgents.push(agentData);
+    }
+    try {
+      localStorage.setItem('bek_cluster_custom_agents', JSON.stringify(state.customAgents));
+    } catch (e) {
+      console.error('Failed to save custom agent to localStorage:', e);
+    }
+    renderAgentMenus();
+  }
+
+  /**
+   * Delete a Custom Agent from Presets
+   */
+  function deleteCustomAgent(agentId, e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    state.customAgents = state.customAgents.filter(a => a.id !== agentId);
+    try {
+      localStorage.setItem('bek_cluster_custom_agents', JSON.stringify(state.customAgents));
+    } catch (e) {
+      console.error('Failed to update localStorage:', e);
+    }
+    renderAgentMenus();
+    showToast('Custom agent removed');
+  }
+
+  /**
    * Render Launch Menus & Empty State Cards
    */
   function renderAgentMenus() {
     // 1. Quick Dropdown Menu
     if (elements.quickAgentList) {
       elements.quickAgentList.innerHTML = '';
+
+      // Standard detected agents
       state.detectedAgents.forEach(agent => {
         const item = document.createElement('button');
         item.className = 'dropdown-item';
@@ -142,33 +200,71 @@
         });
         elements.quickAgentList.appendChild(item);
       });
+
+      // User Saved Custom Agents in Dropdown
+      if (state.customAgents && state.customAgents.length > 0) {
+        const sep = document.createElement('div');
+        sep.className = 'dropdown-header';
+        sep.textContent = 'SAVED CUSTOM AGENTS';
+        elements.quickAgentList.appendChild(sep);
+
+        state.customAgents.forEach(cAgent => {
+          const item = document.createElement('button');
+          item.className = 'dropdown-item';
+          item.type = 'button';
+          item.innerHTML = `
+            <span class="agent-icon-badge" style="background: rgba(139, 92, 246, 0.15); color: #A78BFA;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </span>
+            <span class="dropdown-item-name">${cAgent.name}</span>
+            <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: #A78BFA;">Custom</span>
+          `;
+          item.addEventListener('click', () => {
+            elements.launchDropdown.classList.remove('open');
+            launchAgent(cAgent.command, {
+              command: cAgent.command,
+              args: cAgent.args,
+              name: cAgent.name,
+              cwd: cAgent.cwd
+            });
+          });
+          elements.quickAgentList.appendChild(item);
+        });
+      }
     }
 
-    // 2. Empty State Cards
+    // 2. Empty State Cards (Horizontal 3-row grid expanding horizontally)
     if (elements.emptyAgentCards) {
       elements.emptyAgentCards.innerHTML = '';
+
+      // A. Standard detected agents
       state.detectedAgents.forEach(agent => {
         const card = document.createElement('div');
         card.className = 'agent-card-item';
         card.setAttribute('role', 'button');
         card.tabIndex = 0;
+        card.title = `${agent.name}: ${agent.description || ''}`;
         card.innerHTML = `
-          <div class="agent-card-header">
-            <div class="agent-card-icon" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
-              ${agent.icon || ''}
-            </div>
-            <span class="agent-installed-badge ${agent.isInstalled ? 'installed' : 'uninstalled'}">
-              ${agent.isInstalled ? 'Installed' : 'Custom'}
-            </span>
+          <div class="agent-card-icon" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
+            ${agent.icon || ''}
           </div>
-          <div class="agent-card-name">${agent.name}</div>
-          <div class="agent-card-desc">${agent.description}</div>
-          <button class="btn btn-ghost btn-sm agent-card-btn" type="button">
-            <span>Launch</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14m-7-7 7 7-7 7"/>
+          <div class="agent-card-content">
+            <div class="agent-card-header-line">
+              <span class="agent-card-name">${agent.name}</span>
+              <span class="agent-installed-badge ${agent.isInstalled ? 'installed' : 'uninstalled'}">
+                ${agent.isInstalled ? 'Installed' : 'Custom'}
+              </span>
+            </div>
+            <span class="agent-card-desc">${agent.description || ''}</span>
+          </div>
+          <div class="agent-card-action" title="Launch ${agent.name}">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
-          </button>
+          </div>
         `;
 
         const triggerLaunch = () => launchAgent(agent.id);
@@ -182,6 +278,113 @@
 
         elements.emptyAgentCards.appendChild(card);
       });
+
+      // B. User Saved Custom Agents
+      if (state.customAgents && state.customAgents.length > 0) {
+        state.customAgents.forEach(cAgent => {
+          const card = document.createElement('div');
+          card.className = 'agent-card-item';
+          card.setAttribute('role', 'button');
+          card.tabIndex = 0;
+          card.title = `Custom: ${cAgent.name} (${cAgent.command})`;
+          card.innerHTML = `
+            <div class="agent-card-icon" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.1)); color: #A78BFA;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+            <div class="agent-card-content">
+              <div class="agent-card-header-line">
+                <span class="agent-card-name">${cAgent.name}</span>
+                <span class="agent-installed-badge custom">Custom</span>
+              </div>
+              <span class="agent-card-desc">${cAgent.command}${cAgent.args?.length ? ' ' + cAgent.args.join(' ') : ''}</span>
+            </div>
+            <div class="agent-card-action" title="Launch ${cAgent.name}">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <button class="agent-card-delete-btn" type="button" title="Remove custom agent">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          `;
+
+          const triggerLaunch = () => launchAgent(cAgent.command, {
+            command: cAgent.command,
+            args: cAgent.args,
+            name: cAgent.name,
+            cwd: cAgent.cwd
+          });
+
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.agent-card-delete-btn')) return;
+            triggerLaunch();
+          });
+
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              triggerLaunch();
+            }
+          });
+
+          const delBtn = card.querySelector('.agent-card-delete-btn');
+          if (delBtn) {
+            delBtn.addEventListener('click', (e) => {
+              deleteCustomAgent(cAgent.id, e);
+            });
+          }
+
+          elements.emptyAgentCards.appendChild(card);
+        });
+      }
+
+      // C. "+ Add Custom Agent" Card
+      const addCard = document.createElement('div');
+      addCard.className = 'agent-card-item card-add-custom';
+      addCard.setAttribute('role', 'button');
+      addCard.tabIndex = 0;
+      addCard.title = 'Add a new custom CLI agent to available list';
+      addCard.innerHTML = `
+        <div class="agent-card-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </div>
+        <div class="agent-card-content">
+          <div class="agent-card-header-line">
+            <span class="agent-card-name">Add Custom Agent</span>
+            <span class="agent-installed-badge" style="background: rgba(229, 56, 59, 0.15); color: var(--accent);">+ Add</span>
+          </div>
+          <span class="agent-card-desc">Add any CLI binary or prompt tool</span>
+        </div>
+        <div class="agent-card-action">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14m-7-7 7 7-7 7"/>
+          </svg>
+        </div>
+      `;
+
+      const openAddModal = () => {
+        elements.customAgentModal.style.display = 'flex';
+        elements.customCommandInput.focus();
+      };
+
+      addCard.addEventListener('click', openAddModal);
+      addCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openAddModal();
+        }
+      });
+
+      elements.emptyAgentCards.appendChild(addCard);
     }
   }
 
@@ -1358,10 +1561,39 @@
     const closeModal = () => {
       elements.customAgentModal.style.display = 'none';
       elements.customAgentForm.reset();
+      if (elements.customSavePreset) elements.customSavePreset.checked = true;
     };
 
     elements.closeCustomModalBtn.addEventListener('click', closeModal);
     elements.cancelCustomModalBtn.addEventListener('click', closeModal);
+
+    // Save to List Only Button
+    if (elements.saveOnlyCustomModalBtn) {
+      elements.saveOnlyCustomModalBtn.addEventListener('click', () => {
+        const command = elements.customCommandInput.value.trim();
+        if (!command) {
+          elements.customCommandInput.focus();
+          showToast('Please enter an executable command', 'error');
+          return;
+        }
+
+        const argsStr = elements.customArgsInput.value.trim();
+        const args = argsStr ? argsStr.split(/\s+/) : [];
+        const name = elements.customNameInput.value.trim() || command;
+        const cwd = elements.customCwdInput.value.trim() || state.info?.cwd;
+
+        saveCustomAgent({
+          id: 'custom-' + Date.now(),
+          name,
+          command,
+          args,
+          cwd
+        });
+
+        closeModal();
+        showToast(`Saved "${name}" to Available Agents`, 'success');
+      });
+    }
 
     elements.customAgentModal.addEventListener('click', (e) => {
       if (e.target === elements.customAgentModal) {
@@ -1379,9 +1611,29 @@
       const name = elements.customNameInput.value.trim() || command;
       const cwd = elements.customCwdInput.value.trim() || state.info?.cwd;
 
+      if (elements.customSavePreset && elements.customSavePreset.checked) {
+        saveCustomAgent({
+          id: 'custom-' + Date.now(),
+          name,
+          command,
+          args,
+          cwd
+        });
+      }
+
       closeModal();
       launchAgent(command, { command, args, name, cwd });
     });
+
+    // Horizontal wheel navigation on Empty State cards
+    if (elements.emptyAgentCards) {
+      elements.emptyAgentCards.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          elements.emptyAgentCards.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
 
     // Window resize refit
     window.addEventListener('resize', () => {

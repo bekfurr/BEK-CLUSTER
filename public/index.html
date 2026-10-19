@@ -180,7 +180,10 @@
           </div>
 
           <div class="detected-agents-section">
-            <div class="section-heading">AVAILABLE AGENTS</div>
+            <div class="section-heading-row">
+              <div class="section-heading">AVAILABLE AGENTS</div>
+              <span class="section-heading-hint">Scroll horizontally ↔</span>
+            </div>
             <div class="agent-cards-grid" id="emptyAgentCards">
               <!-- Dynamically populated cards -->
             </div>
@@ -273,10 +276,17 @@
               <input type="text" id="customCwdInput" value="" spellcheck="false">
               <span class="form-hint">Defaults to cluster workspace directory.</span>
             </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label" for="customSavePreset">
+                <input type="checkbox" id="customSavePreset" checked>
+                <span>Save to Available Agents list</span>
+              </label>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-ghost" id="cancelCustomModalBtn">Cancel</button>
-            <button type="submit" class="btn btn-primary">Launch Instance</button>
+            <button type="button" class="btn btn-secondary" id="saveOnlyCustomModalBtn">Save to List</button>
+            <button type="submit" class="btn btn-primary" id="launchCustomModalBtn">Launch Instance</button>
           </div>
         </form>
       </div>
