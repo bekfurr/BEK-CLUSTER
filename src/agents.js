@@ -51,15 +51,15 @@ const AGENT_PROFILES = [
     icon: `<svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><title>OpenCode</title><path d="M16 6H8v12h8V6zm4 16H4V2h16v20z" fill="#38BDF8" fill-rule="evenodd"/></svg>`
   },
   {
-    id: 'gemini',
-    name: 'Gemini CLI',
-    binary: 'gemini',
+    id: 'agy',
+    name: 'Antigravity CLI',
+    binary: 'agy',
     defaultArgs: [],
-    color: '#3186FF',
-    gradient: 'linear-gradient(135deg, rgba(49, 134, 255, 0.2), rgba(37, 99, 235, 0.1))',
+    color: '#A855F7',
+    gradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(126, 34, 206, 0.1))',
     category: 'ai-agent',
-    description: 'Google Gemini terminal assistant for CLI workflows',
-    icon: `<svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><title>Gemini</title><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/></svg>`
+    description: 'Google DeepMind Antigravity CLI coding assistant (agy)',
+    icon: `<svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><title>Antigravity CLI</title><path d="M21.751 22.607c1.34 1.005 3.35.335 1.508-1.508C17.73 15.74 18.904 1 12.037 1 5.17 1 6.342 15.74.815 21.1c-2.01 2.009.167 2.511 1.507 1.506 5.192-3.517 4.857-9.714 9.715-9.714 4.857 0 4.522 6.197 9.714 9.715z" fill="#A855F7" fill-rule="evenodd"/></svg>`
   },
   {
     id: 'copilot',

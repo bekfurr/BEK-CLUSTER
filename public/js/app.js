@@ -56,7 +56,32 @@
     customCommandInput: document.getElementById('customCommandInput'),
     customArgsInput: document.getElementById('customArgsInput'),
     customNameInput: document.getElementById('customNameInput'),
-    customCwdInput: document.getElementById('customCwdInput')
+    customCwdInput: document.getElementById('customCwdInput'),
+
+    // Usage Modal Elements
+    btnUsageModal: document.getElementById('btnUsageModal'),
+    navTotalTokensBadge: document.getElementById('navTotalTokensBadge'),
+    usageModal: document.getElementById('usageModal'),
+    closeUsageModalBtn: document.getElementById('closeUsageModalBtn'),
+    btnCloseUsageModalBottom: document.getElementById('btnCloseUsageModalBottom'),
+    btnResetUsageStats: document.getElementById('btnResetUsageStats'),
+    usageTotalTokens: document.getElementById('usageTotalTokens'),
+    usagePromptCompSub: document.getElementById('usagePromptCompSub'),
+    usageModelsCount: document.getElementById('usageModelsCount'),
+    usageSessionsCount: document.getElementById('usageSessionsCount'),
+    usageModelsList: document.getElementById('usageModelsList'),
+    usageAgentsList: document.getElementById('usageAgentsList'),
+    usageSessionsTableBody: document.getElementById('usageSessionsTableBody'),
+
+    // Switch Directory Elements
+    switchDirModal: document.getElementById('switchDirModal'),
+    closeSwitchDirModalBtn: document.getElementById('closeSwitchDirModalBtn'),
+    cancelSwitchDirModalBtn: document.getElementById('cancelSwitchDirModalBtn'),
+    confirmSwitchDirBtn: document.getElementById('confirmSwitchDirBtn'),
+    switchDirForm: document.getElementById('switchDirForm'),
+    switchDirSessionId: document.getElementById('switchDirSessionId'),
+    switchDirAgentName: document.getElementById('switchDirAgentName'),
+    switchDirInput: document.getElementById('switchDirInput')
   };
 
   /**
@@ -70,6 +95,8 @@
     await loadInfo();
     await loadAgents();
     await loadExistingSessions();
+    await loadUsageSummary();
+    setInterval(() => loadUsageSummary(), 10000);
     setLayout(state.activeLayout);
     updateUIState();
   }
@@ -542,6 +569,12 @@
             ${iconSvg}
           </div>
           <span class="card-title" title="${session.command || session.agentName}">${session.agentName}</span>
+          <button class="pane-cwd-pill" type="button" title="Directory: ${session.cwd || 'Workspace'}. Click to change & restart" data-session-id="${session.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="pane-cwd-text">${formatCwdShort(session.cwd)}</span>
+          </button>
           <span class="agent-status-dot state-done" id="status-dot-${session.id}" title="Ready"></span>
           <span class="pane-shortcut-badge" title="Focus: ⌘+Number"></span>
         </div>
@@ -685,6 +718,15 @@
       e.stopPropagation();
       restartSession(session.id);
     });
+
+    const cwdPill = cardEl.querySelector('.pane-cwd-pill');
+    if (cwdPill) {
+      cwdPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSwitchDirModal(session.id);
+      });
+    }
+
     btnClear.addEventListener('click', (e) => {
       e.stopPropagation();
       view.clear();
@@ -1129,17 +1171,252 @@
   }
 
   /**
+   * Helper formatting functions
+   */
+  function formatCwdShort(cwd) {
+    if (!cwd) return 'Workspace';
+    const clean = cwd.replace(/\\/g, '/');
+    const parts = clean.split('/').filter(Boolean);
+    if (parts.length <= 2) return '/' + parts.join('/');
+    return '.../' + parts.slice(-2).join('/');
+  }
+
+  function formatTokens(num) {
+    if (num === undefined || num === null) return '0';
+    return Number(num).toLocaleString();
+  }
+
+  function formatTokensShort(num) {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return String(num);
+  }
+
+  /**
+   * Switch Working Directory Modal Controls
+   */
+  function openSwitchDirModal(sessionId) {
+    const item = state.sessions.get(sessionId);
+    if (!item) return;
+
+    elements.switchDirSessionId.value = sessionId;
+    elements.switchDirAgentName.innerHTML = `Agent: <strong>${item.session.agentName}</strong> &bull; Current: <span style="font-family:var(--font-mono);font-size:11px;">${item.session.cwd || state.info?.cwd || ''}</span>`;
+    elements.switchDirInput.value = item.session.cwd || state.info?.cwd || '';
+    elements.switchDirModal.style.display = 'flex';
+    elements.switchDirInput.focus();
+    elements.switchDirInput.select();
+  }
+
+  function closeSwitchDirModal() {
+    elements.switchDirModal.style.display = 'none';
+    elements.switchDirForm.reset();
+  }
+
+  async function handleSwitchDirSubmit(e) {
+    e.preventDefault();
+    const sessionId = elements.switchDirSessionId.value;
+    const newCwd = elements.switchDirInput.value.trim();
+    if (!sessionId || !newCwd) return;
+
+    const item = state.sessions.get(sessionId);
+    if (!item) return;
+
+    closeSwitchDirModal();
+    showToast(`Restarting ${item.session.agentName} in new directory...`);
+
+    try {
+      const res = await window.API.restartSession(sessionId, newCwd);
+      if (res.session) {
+        item.session = res.session;
+        const pill = item.cardEl.querySelector('.pane-cwd-pill');
+        if (pill) {
+          pill.title = `Directory: ${res.session.cwd}. Click to change & restart`;
+          const textEl = pill.querySelector('.pane-cwd-text');
+          if (textEl) textEl.textContent = formatCwdShort(res.session.cwd);
+        }
+        setSessionStatus(sessionId, 'thinking');
+        setTimeout(() => setSessionStatus(sessionId, 'done'), 1500);
+        setFocus(sessionId);
+        item.view.focus();
+        showToast(`Directory updated & ${item.session.agentName} restarted`, 'success');
+      }
+    } catch (err) {
+      console.error('Failed to change directory:', err);
+      showToast('Directory switch failed', 'error');
+    }
+  }
+
+  /**
+   * Token & Model Usage Analytics Controls
+   */
+  async function loadUsageSummary(renderModalContent = false) {
+    try {
+      const summary = await window.API.getUsage();
+      if (!summary) return;
+
+      // Update Top Nav Live Badge
+      if (elements.navTotalTokensBadge) {
+        elements.navTotalTokensBadge.textContent = `${formatTokensShort(summary.totalTokens)} tkn`;
+        elements.navTotalTokensBadge.title = `Total: ${formatTokens(summary.totalTokens)} tokens (Prompt: ${formatTokens(summary.totalPromptTokens)}, Completion: ${formatTokens(summary.totalCompletionTokens)})`;
+      }
+
+      // If modal is open or explicitly requested, populate modal content
+      if (renderModalContent || (elements.usageModal && elements.usageModal.style.display !== 'none')) {
+        renderUsageModalData(summary);
+      }
+    } catch (e) {
+      console.warn('Failed to load usage summary:', e);
+    }
+  }
+
+  function renderUsageModalData(summary) {
+    if (!summary) return;
+
+    // 1. KPI Cards
+    if (elements.usageTotalTokens) {
+      elements.usageTotalTokens.textContent = formatTokens(summary.totalTokens);
+    }
+    if (elements.usagePromptCompSub) {
+      elements.usagePromptCompSub.textContent = `Prompt: ${formatTokens(summary.totalPromptTokens)} • Completion: ${formatTokens(summary.totalCompletionTokens)}`;
+    }
+    const modelKeys = Object.keys(summary.models || {});
+    if (elements.usageModelsCount) {
+      elements.usageModelsCount.textContent = String(modelKeys.length);
+    }
+    const sessionsList = summary.sessions || [];
+    if (elements.usageSessionsCount) {
+      elements.usageSessionsCount.textContent = String(sessionsList.length);
+    }
+
+    // 2. Models Breakdown
+    if (elements.usageModelsList) {
+      elements.usageModelsList.innerHTML = '';
+      if (modelKeys.length === 0) {
+        elements.usageModelsList.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">No model activity recorded yet. Run prompts or interact with agents to track tokens.</div>';
+      } else {
+        const sortedModels = modelKeys.sort((a, b) => (summary.models[b].totalTokens || 0) - (summary.models[a].totalTokens || 0));
+        const maxTokens = Math.max(1, ...sortedModels.map(k => summary.models[k].totalTokens || 0));
+
+        sortedModels.forEach(modelKey => {
+          const m = summary.models[modelKey];
+          const pct = Math.min(100, Math.max(5, Math.round((m.totalTokens / maxTokens) * 100)));
+          const itemEl = document.createElement('div');
+          itemEl.className = 'usage-model-item';
+          itemEl.innerHTML = `
+            <div class="usage-model-top">
+              <span class="usage-model-name">${modelKey}</span>
+              <span class="usage-model-tokens">${formatTokens(m.totalTokens)} tokens
+                <span class="usage-model-tokens-sub">(Prompt: ${formatTokens(m.promptTokens)} / Comp: ${formatTokens(m.completionTokens)})</span>
+              </span>
+            </div>
+            <div class="usage-progress-track">
+              <div class="usage-progress-bar" style="width: ${pct}%"></div>
+            </div>
+          `;
+          elements.usageModelsList.appendChild(itemEl);
+        });
+      }
+    }
+
+    // 3. Per-Agent Breakdown
+    if (elements.usageAgentsList) {
+      elements.usageAgentsList.innerHTML = '';
+      const agentKeys = Object.keys(summary.agents || {});
+      if (agentKeys.length === 0) {
+        elements.usageAgentsList.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">No agent activity logged.</div>';
+      } else {
+        agentKeys.forEach(agentKey => {
+          const ag = summary.agents[agentKey];
+          const card = document.createElement('div');
+          card.className = 'usage-agent-card';
+          card.innerHTML = `
+            <span class="usage-agent-name" title="${ag.name}">${ag.name}</span>
+            <span class="usage-agent-count">${formatTokens(ag.totalTokens)} tkn (${ag.count}x)</span>
+          `;
+          elements.usageAgentsList.appendChild(card);
+        });
+      }
+    }
+
+    // 4. Consolidated Sessions Table (One Row Per Agent Window)
+    if (elements.usageSessionsTableBody) {
+      elements.usageSessionsTableBody.innerHTML = '';
+      if (sessionsList.length === 0) {
+        elements.usageSessionsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">No agent window activity recorded yet</td></tr>';
+      } else {
+        sessionsList.forEach(sess => {
+          const tr = document.createElement('tr');
+          const isCurrentlyActive = state.sessions.has(sess.id) && sess.status === 'running';
+          const timeStr = sess.lastActiveAt ? new Date(sess.lastActiveAt).toLocaleTimeString() : (sess.startedAt ? new Date(sess.startedAt).toLocaleTimeString() : '-');
+
+          const statusBadge = isCurrentlyActive
+            ? `<span class="usage-tag-explicit" style="background:rgba(127,209,160,0.15);color:#7FD1A0;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#7FD1A0;"></span>Active</span>`
+            : `<span class="usage-tag-heuristic" style="background:rgba(255,255,255,0.06);color:var(--text-muted);">Exited</span>`;
+
+          tr.innerHTML = `
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <strong>${sess.agentName || 'Agent'}</strong>
+              </div>
+            </td>
+            <td><span style="color:#C084FC;font-weight:600;font-family:var(--font-mono);">${sess.model || 'Unknown'}</span></td>
+            <td><span title="${sess.cwd || ''}" style="color:var(--text-dim);font-size:11px;">${formatCwdShort(sess.cwd)}</span></td>
+            <td>${formatTokens(sess.promptTokens)}</td>
+            <td>${formatTokens(sess.completionTokens)}</td>
+            <td style="color:#FFF;font-weight:700;">${formatTokens(sess.totalTokens)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                ${statusBadge}
+                <span style="color:var(--text-muted);font-size:10px;">${timeStr}</span>
+              </div>
+            </td>
+          `;
+          elements.usageSessionsTableBody.appendChild(tr);
+        });
+      }
+    }
+  }
+
+  function openUsageModal() {
+    elements.usageModal.style.display = 'flex';
+    loadUsageSummary(true);
+  }
+
+  function closeUsageModal() {
+    elements.usageModal.style.display = 'none';
+  }
+
+  async function handleResetUsage() {
+    if (!confirm('Are you sure you want to reset all token and model usage history?')) return;
+    try {
+      await window.API.resetUsage();
+      await loadUsageSummary(true);
+      showToast('Usage statistics reset', 'success');
+    } catch (e) {
+      console.error('Reset usage error:', e);
+      showToast('Failed to reset usage', 'error');
+    }
+  }
+
+  /**
    * Restart a session
    */
-  async function restartSession(sessionId) {
+  async function restartSession(sessionId, newCwd = null) {
     const item = state.sessions.get(sessionId);
     if (!item) return;
 
     try {
       showToast(`Restarting ${item.session.agentName}...`);
-      const res = await window.API.restartSession(sessionId);
+      const res = await window.API.restartSession(sessionId, newCwd);
       if (res.session) {
         item.session = res.session;
+        const pill = item.cardEl.querySelector('.pane-cwd-pill');
+        if (pill) {
+          pill.title = `Directory: ${res.session.cwd}. Click to change & restart`;
+          const textEl = pill.querySelector('.pane-cwd-text');
+          if (textEl) textEl.textContent = formatCwdShort(res.session.cwd);
+        }
         setSessionStatus(sessionId, 'thinking');
         setTimeout(() => setSessionStatus(sessionId, 'done'), 1500);
         setFocus(sessionId);
@@ -1458,6 +1735,14 @@
 
       // Escape: Dismiss overlays or collapse broadcast
       if (e.key === 'Escape') {
+        if (elements.switchDirModal && elements.switchDirModal.style.display !== 'none') {
+          closeSwitchDirModal();
+          return;
+        }
+        if (elements.usageModal && elements.usageModal.style.display !== 'none') {
+          closeUsageModal();
+          return;
+        }
         if (elements.customAgentModal.style.display !== 'none') {
           elements.customAgentModal.style.display = 'none';
           elements.customAgentForm.reset();
@@ -1624,6 +1909,45 @@
       closeModal();
       launchAgent(command, { command, args, name, cwd });
     });
+
+    // Switch Directory Modal Listeners
+    if (elements.closeSwitchDirModalBtn) {
+      elements.closeSwitchDirModalBtn.addEventListener('click', closeSwitchDirModal);
+    }
+    if (elements.cancelSwitchDirModalBtn) {
+      elements.cancelSwitchDirModalBtn.addEventListener('click', closeSwitchDirModal);
+    }
+    if (elements.switchDirModal) {
+      elements.switchDirModal.addEventListener('click', (e) => {
+        if (e.target === elements.switchDirModal) {
+          closeSwitchDirModal();
+        }
+      });
+    }
+    if (elements.switchDirForm) {
+      elements.switchDirForm.addEventListener('submit', handleSwitchDirSubmit);
+    }
+
+    // Usage Analytics Modal Listeners
+    if (elements.btnUsageModal) {
+      elements.btnUsageModal.addEventListener('click', openUsageModal);
+    }
+    if (elements.closeUsageModalBtn) {
+      elements.closeUsageModalBtn.addEventListener('click', closeUsageModal);
+    }
+    if (elements.btnCloseUsageModalBottom) {
+      elements.btnCloseUsageModalBottom.addEventListener('click', closeUsageModal);
+    }
+    if (elements.btnResetUsageStats) {
+      elements.btnResetUsageStats.addEventListener('click', handleResetUsage);
+    }
+    if (elements.usageModal) {
+      elements.usageModal.addEventListener('click', (e) => {
+        if (e.target === elements.usageModal) {
+          closeUsageModal();
+        }
+      });
+    }
 
     // Horizontal wheel navigation on Empty State cards
     if (elements.emptyAgentCards) {

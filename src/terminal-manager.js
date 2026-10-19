@@ -1,5 +1,7 @@
 const pty = require('node-pty');
+const path = require('path');
 const { getAgentProfile } = require('./agents');
+const usageManager = require('./usage-manager');
 
 class TerminalManager {
   constructor(defaultCwd = process.cwd()) {
@@ -107,6 +109,7 @@ class TerminalManager {
       ptyProcess.onExit(({ exitCode, signal }) => {
         session.status = 'exited';
         session.exitCode = exitCode !== undefined ? exitCode : signal;
+        usageManager.updateSessionStatus(id, 'exited');
         console.log(`[TerminalManager] Session ${id} (${displayName}) exited with code ${session.exitCode}`);
 
         for (const exitListener of session.exitListeners) {
@@ -162,9 +165,9 @@ class TerminalManager {
   }
 
   /**
-   * Restart an existing session.
+   * Restart an existing session (with optional new working directory).
    */
-  restart(sessionId) {
+  restart(sessionId, newCwd = null) {
     const oldSession = this.sessions.get(sessionId);
     if (!oldSession) return null;
 
@@ -179,6 +182,13 @@ class TerminalManager {
 
     const command = oldSession.command;
     const args = oldSession.args;
+    if (newCwd && typeof newCwd === 'string') {
+      try {
+        oldSession.cwd = path.resolve(newCwd);
+      } catch (e) {
+        // fallback to existing
+      }
+    }
     const cwd = oldSession.cwd;
     const cols = oldSession.cols;
     const rows = oldSession.rows;
@@ -204,7 +214,12 @@ class TerminalManager {
       oldSession.status = 'running';
       oldSession.exitCode = null;
       oldSession.startedAt = new Date().toISOString();
-      oldSession.history = '\r\n\x1b[33m--- [BEK-CLUSTER] Session Restarted ---\x1b[0m\r\n';
+      usageManager.updateSessionStatus(sessionId, 'running');
+      if (newCwd) {
+        usageManager.updateSessionCwd(sessionId, cwd);
+      }
+      const cwdNotice = newCwd ? ` Directory changed to: ${cwd} &` : '';
+      oldSession.history = `\r\n\x1b[33m--- [BEK-CLUSTER]${cwdNotice} Session Restarted ---\x1b[0m\r\n`;
 
       ptyProcess.onData(data => {
         oldSession.history += data;
@@ -223,6 +238,7 @@ class TerminalManager {
       ptyProcess.onExit(({ exitCode, signal }) => {
         oldSession.status = 'exited';
         oldSession.exitCode = exitCode !== undefined ? exitCode : signal;
+        usageManager.updateSessionStatus(sessionId, 'exited');
         for (const exitListener of oldSession.exitListeners) {
           try {
             exitListener(oldSession.exitCode);
@@ -236,6 +252,7 @@ class TerminalManager {
     } catch (err) {
       oldSession.status = 'error';
       oldSession.errorMessage = err.message;
+      usageManager.updateSessionStatus(sessionId, 'error');
       return this.serializeSession(oldSession);
     }
   }
@@ -246,6 +263,7 @@ class TerminalManager {
   kill(sessionId) {
     const session = this.sessions.get(sessionId);
     if (!session) return false;
+    usageManager.updateSessionStatus(sessionId, 'exited');
 
     if (session.pty && session.status === 'running') {
       try {

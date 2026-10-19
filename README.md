@@ -1,11 +1,11 @@
 # BEKFURR AGENT CLUSTER (`bek-cluster`)
 
 > Multi-Agent AI Terminal Orchestrator & Virtual Workspace  
-> Run and orchestrate multiple CLI AI agents (Claude Code, OpenAI Codex, Google Antigravity, OpenCode, Gemini, Copilot, etc.) simultaneously in an Apple visionOS / macOS inspired web environment.
+> Run and orchestrate multiple CLI AI agents (Claude Code, Antigravity CLI, OpenAI Codex, OpenCode, Copilot, etc.) simultaneously in an Apple visionOS / macOS inspired web environment.
 
 ---
 
-![Version](https://img.shields.io/badge/BEK--CLUSTER-v1.1.0-E5383B?style=flat-square&logo=terminal)
+![Version](https://img.shields.io/badge/BEK--CLUSTER-v1.0.0-E5383B?style=flat-square&logo=terminal)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js)
 ![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)
 
@@ -19,8 +19,10 @@ Instead of managing cluttered tmux panes or detached terminal windows, `bek-clus
 
 ### Highlights
 
-- **Auto-Detection**: Scans your system environment and provides one-click launching for detected tools (`claude`, `codex`, `antigravity`, `opencode`, `gemini`, `copilot`, `crush`, `pi`, `bash`, or custom binaries).
+- **Auto-Detection**: Scans your system environment and provides one-click launching for detected tools (`claude`, `agy`, `codex`, `opencode`, `copilot`, `crush`, `pi`, `bash`, or custom binaries).
 - **Simultaneous Multi-Agent Execution**: Run multiple independent agent sessions in parallel on the same project repository.
+- **Working Directory Switcher & Safety Restart**: View each agent's active folder path directly in the pane header. Click to re-target the agent to a different directory with instant process re-spawning and safety confirmation.
+- **Token & Model Usage Analytics**: Real-time stream sniffing for token consumption (prompt, completion, total) and AI model tracking with visionOS-styled breakdown KPIs, progress bars, and historical logs.
 - **Spotlight Broadcast Bar**: Floating capsule (`Cmd/Ctrl + K`) allowing you to transmit a prompt to all active agents simultaneously for benchmark comparison or collaborative work.
 - **Dynamic Layout Engine**:
   - **Vertikal**: Displays up to 3 agents vertically with smooth wheel / arrow navigation.
@@ -125,7 +127,7 @@ bek-cluster --no-open
 | **Antigravity** | `antigravity` | Google DeepMind agentic coding system |
 | **Codex CLI** | `codex` | OpenAI terminal assistant |
 | **OpenCode** | `opencode` | Autonomous open-source AI software engineer |
-| **Gemini CLI** | `gemini` | Google Gemini developer terminal tools |
+| **Antigravity CLI** | `agy` | Google DeepMind Antigravity CLI coding assistant |
 | **GitHub Copilot** | `copilot` | GitHub Copilot CLI |
 | **Crush CLI** | `crush` | Terminal code assistant |
 | **Pi CLI** | `pi` | Personal AI assistant |

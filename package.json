@@ -26,6 +26,24 @@
   "author": "bekfurr",
   "license": "MIT",
   "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bekfurr/BEK-CLUSTER.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bekfurr/BEK-CLUSTER/issues"
+  },
+  "homepage": "https://github.com/bekfurr/BEK-CLUSTER#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin",
+    "src",
+    "public",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-web-links": "^0.12.0",

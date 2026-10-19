@@ -5,6 +5,7 @@ const os = require('os');
 const { detectAgents, getAgentProfile } = require('./agents');
 const TerminalManager = require('./terminal-manager');
 const { setupWebSocketServer } = require('./websocket');
+const usageManager = require('./usage-manager');
 
 function createServer(options = {}) {
   const { cwd = process.cwd() } = options;
@@ -113,10 +114,10 @@ function createServer(options = {}) {
   });
 
   /**
-   * Restart an existing session
+   * Restart an existing session (optional new cwd)
    */
   app.post('/api/sessions/:id/restart', (req, res) => {
-    const session = terminalManager.restart(req.params.id);
+    const session = terminalManager.restart(req.params.id, req.body?.cwd);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
@@ -141,10 +142,32 @@ function createServer(options = {}) {
     }
 
     const results = terminalManager.broadcast(prompt, sessionIds, appendNewline);
+    for (const r of results) {
+      const s = terminalManager.getSession(r.sessionId);
+      if (s) usageManager.sniffInput(r.sessionId, s, prompt);
+    }
+
     res.json({
       success: true,
       broadcastedTo: results
     });
+  });
+
+  /**
+   * Token & Model Usage Stats
+   */
+  app.get('/api/usage', (req, res) => {
+    res.json(usageManager.getSummary());
+  });
+
+  app.post('/api/usage/record', (req, res) => {
+    usageManager.record(req.body);
+    res.json({ success: true, summary: usageManager.getSummary() });
+  });
+
+  app.post('/api/usage/reset', (req, res) => {
+    usageManager.reset();
+    res.json({ success: true, summary: usageManager.getSummary() });
   });
 
   // Attach WebSocket server

@@ -38,8 +38,22 @@ const API = {
     return res.json();
   },
 
-  async restartSession(id) {
+  async restartSession(id, cwd = null) {
     const res = await fetch(`/api/sessions/${id}/restart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cwd })
+    });
+    return res.json();
+  },
+
+  async getUsage() {
+    const res = await fetch('/api/usage');
+    return res.json();
+  },
+
+  async resetUsage() {
+    const res = await fetch('/api/usage/reset', {
       method: 'POST'
     });
     return res.json();

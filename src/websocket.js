@@ -1,4 +1,5 @@
 const { WebSocketServer } = require('ws');
+const usageManager = require('./usage-manager');
 
 /**
  * Setup WebSocket handling for real-time PTY communication.
@@ -60,6 +61,7 @@ function setupWebSocketServer(httpServer, terminalManager) {
 
           // Stream output from PTY to this WebSocket
           const onData = (chunk) => {
+            usageManager.sniffOutput(sessionId, session, chunk);
             send({
               type: 'output',
               sessionId,
@@ -115,6 +117,10 @@ function setupWebSocketServer(httpServer, terminalManager) {
         case 'input': {
           const { sessionId, data } = msg;
           if (sessionId && typeof data === 'string') {
+            const session = terminalManager.getSession(sessionId);
+            if (session) {
+              usageManager.sniffInput(sessionId, session, data);
+            }
             terminalManager.write(sessionId, data);
           }
           break;

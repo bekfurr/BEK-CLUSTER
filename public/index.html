@@ -80,6 +80,15 @@
       </div>
 
       <div class="nav-right">
+        <!-- Usage Analytics Button -->
+        <button id="btnUsageModal" class="btn btn-ghost usage-toggle" title="Model & Token Usage Analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20V10M18 20V4M6 20v-4"/>
+          </svg>
+          <span>Usage</span>
+          <span class="badge badge-usage" id="navTotalTokensBadge">0 tkn</span>
+        </button>
+
         <!-- Broadcast Toggle Button -->
         <button id="toggleBroadcastBtn" class="btn btn-ghost broadcast-toggle" title="Toggle Broadcast Prompt Bar (⌘K)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -289,6 +298,159 @@
             <button type="submit" class="btn btn-primary" id="launchCustomModalBtn">Launch Instance</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Switch Directory & Restart Modal -->
+    <div id="switchDirModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content modal-content-sm" role="dialog" aria-modal="true" aria-labelledby="switchDirTitle">
+        <div class="modal-header">
+          <div class="modal-title" id="switchDirTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Change Working Directory</span>
+          </div>
+          <button class="modal-close" id="closeSwitchDirModalBtn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form id="switchDirForm">
+          <input type="hidden" id="switchDirSessionId" value="">
+          <div class="modal-body">
+            <div class="agent-target-banner" id="switchDirAgentName">
+              Agent: <strong>Claude Code</strong>
+            </div>
+
+            <!-- Danger / Warning Notice -->
+            <div class="warning-callout">
+              <div class="warning-callout-icon">⚠️</div>
+              <div class="warning-callout-body">
+                <div class="warning-callout-title">Diqqat: Agent qayta ishga tushiriladi</div>
+                <div class="warning-callout-desc">
+                  Papkani o'zgartirish ushbu agent sessiyasini darhol to'xtatadi va yangi katalogda qayta ishga tushiradi (restart qiladi). Saqlanmagan jarayonlar to'xtatiladi.
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="switchDirInput">New Working Directory Path</label>
+              <input type="text" id="switchDirInput" value="" required spellcheck="false" autocomplete="off">
+              <span class="form-hint">Absolute or relative path (e.g. /home/bekfurr/projects/my-app)</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="cancelSwitchDirModalBtn">Bekor qilish</button>
+            <button type="submit" class="btn btn-warning-solid" id="confirmSwitchDirBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>
+              </svg>
+              <span>O'zgartirish va Qayta yuklash</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Token & Model Usage Analytics Modal -->
+    <div id="usageModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content modal-content-lg" role="dialog" aria-modal="true" aria-labelledby="usageModalTitle">
+        <div class="modal-header">
+          <div class="modal-title" id="usageModalTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20V10M18 20V4M6 20v-4"/>
+            </svg>
+            <span>Token & Model Usage Analytics</span>
+          </div>
+          <button class="modal-close" id="closeUsageModalBtn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body usage-modal-body">
+          <!-- KPI Summary Cards -->
+          <div class="usage-kpi-grid">
+            <div class="usage-kpi-card">
+              <div class="usage-kpi-label">TOTAL CONSUMED TOKENS</div>
+              <div class="usage-kpi-val" id="usageTotalTokens">0</div>
+              <div class="usage-kpi-sub" id="usagePromptCompSub">Prompt: 0 • Completion: 0</div>
+            </div>
+            <div class="usage-kpi-card">
+              <div class="usage-kpi-label">TRACKED MODELS</div>
+              <div class="usage-kpi-val" id="usageModelsCount">0</div>
+              <div class="usage-kpi-sub">Active AI Architectures</div>
+            </div>
+            <div class="usage-kpi-card">
+              <div class="usage-kpi-label">ACTIVE / RECORDED SESSIONS</div>
+              <div class="usage-kpi-val" id="usageSessionsCount">0</div>
+              <div class="usage-kpi-sub">Tracked Agent Windows</div>
+            </div>
+          </div>
+
+          <!-- Model Breakdown Section -->
+          <div class="usage-section">
+            <div class="usage-section-header">
+              <span class="usage-section-title">MODEL CONSUMPTION BREAKDOWN</span>
+              <span class="usage-section-hint">Tokens per architecture</span>
+            </div>
+            <div class="usage-models-list" id="usageModelsList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Per-Agent Breakdown Section -->
+          <div class="usage-section">
+            <div class="usage-section-header">
+              <span class="usage-section-title">AGENT ACTIVITY BREAKDOWN</span>
+              <span class="usage-section-hint">Tokens per agent profile</span>
+            </div>
+            <div class="usage-agents-list" id="usageAgentsList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Consolidated Agent Sessions Table (One Row Per Agent Window) -->
+          <div class="usage-section">
+            <div class="usage-section-header">
+              <span class="usage-section-title">AGENT SESSIONS USAGE</span>
+              <span class="usage-section-hint">One aggregate row per agent window</span>
+            </div>
+            <div class="usage-table-wrapper">
+              <table class="usage-table">
+                <thead>
+                  <tr>
+                    <th>Agent Pane</th>
+                    <th>Model</th>
+                    <th>Directory</th>
+                    <th>Prompt</th>
+                    <th>Completion</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="usageSessionsTableBody">
+                  <!-- Dynamically populated (one row per agent window) -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost btn-danger-hover" id="btnResetUsageStats">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            <span>Reset Statistics</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="btnCloseUsageModalBottom">Done</button>
+        </div>
       </div>
     </div>
   </div>
