@@ -1,138 +1,147 @@
-# ⚡ BEKFURR AGENT CLUSTER (`bek-cluster`)
+# BEKFURR AGENT CLUSTER (`bek-cluster`)
 
-> **Multi-Agent AI Terminal Orchestrator & Web Cluster**  
-> Bir vaqtning o'zida bir nechta AI agentlarini (Claude Code, Codex, Antigravity, OpenCode, Gemini, Copilot va h.k.) bitta zamonaviy veb-interfeysda parallel ishlatish vositasi.
-
----
-
-![BEK-CLUSTER](https://img.shields.io/badge/BEK--CLUSTER-v1.0.0-06B6D4?style=for-the-badge&logo=terminal)
-![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js)
-![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+> Multi-Agent AI Terminal Orchestrator & Virtual Workspace  
+> Run and orchestrate multiple CLI AI agents (Claude Code, OpenAI Codex, Google Antigravity, OpenCode, Gemini, Copilot, etc.) simultaneously in an Apple visionOS / macOS inspired web environment.
 
 ---
 
-## 🌟 English Overview
-
-**BEKFURR AGENT CLUSTER** (`bek-cluster`) is a developer workspace that lets you run and interact with multiple CLI AI agents side-by-side in a unified web window. Instead of juggling dozens of terminal windows or tmux panes, `bek-cluster` provides:
-
-- 🤖 **Auto-Detected AI Agents**: Automatically detects installed agents in your environment (`claude`, `codex`, `antigravity`, `opencode`, `gemini`, `copilot`, `crush`, `pi`, `bash`, etc.).
-- ⚡ **Simultaneous Multi-Agent Execution**: Launch multiple instances of different or identical agents side-by-side.
-- 📡 **Broadcast Prompting**: Send a single prompt or command to **all active agents at once** to benchmark their responses, compare architectures, or parallelize tasks.
-- 🖥️ **Full Interactive PTY Terminals**: Powered by `xterm.js` and `node-pty` with truecolor support, full ANSI colors, cursor blink, resize handling, mouse interaction, and link clicking.
-- 📐 **Dynamic Layouts**: Switch effortlessly between:
-  - **Auto Responsive Grid** (1, 2, 3, 4, 6+ panes)
-  - **1x2 Vertical Split** (2 agents side-by-side)
-  - **2x1 Horizontal Split** (stacked agents)
-  - **1x3 Triple Split** (3 agents side-by-side)
-  - **Tabs Mode** (Full-screen tabs)
-  - **Focus / Maximize Mode** (Click any pane to expand 100%)
-- 📂 **Workspace Aware**: Launches in whichever directory you run `bek-cluster` from, pointing all agents to your current project.
-- 🚀 **One-Command CLI**: Install once via npm, then invoke `bek-cluster` from any terminal or project folder anytime!
+![Version](https://img.shields.io/badge/BEK--CLUSTER-v1.1.0-E5383B?style=flat-square&logo=terminal)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js)
+![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)
 
 ---
 
-## 🇺🇿 O'zbekcha Tavsif
+## Overview
 
-**BEKFURR AGENT CLUSTER** — kompyuteringizda o'rnatilgan sun'iy intellekt agentlarini (Claude Code, OpenAI Codex, Google Antigravity, OpenCode va boshqalar) bitta oynada, bo'lingan ekran (split-screen / grid / tabs) ko'rinishida parallel ishlatish imkonini beruvchi mahalliy veb-interfeys.
+**BEKFURR AGENT CLUSTER** is a minimalist, local developer workspace designed for running, comparing, and broadcasting commands across multiple AI coding agents side-by-side.
 
-### Asosiy imkoniyatlar:
-1. **Barcha agentlar bitta oynada**: Terminal oynalari o'rtasida sarson bo'lmasdan Claude Code, Codex, Antigravity va OpenCode kabilarni bitta ekranda boshqarasiz.
-2. **Broadcast Prompt (Barcha agentlarga bir vaqtda topshiriq yuborish)**: Topshiriq yozasiz va "Transmit" tugmasini bosishingiz bilan hamma faol agentlarga birdaniga yuboriladi. Agentlarning qaysi biri yaxshiroq yechim berishini taqqoslash juda qulay!
-3. **To'liq interaktiv PTY Terminal**: Ranglar (TrueColor), kursor harakatlari, buyruqlar tarixi va klaviatura kombinatsiyalari xuddi odatiy konsoldagidek ishlaydi.
-4. **Moslashuvchan Layoutlar**: Split (2 talik, 3 talik), Grid (to'rsimon), Tabs (tablar ko'rinishida) yoki bitta agentni kattalashtirib (maximize) ishlash.
-5. **Ixtiyoriy buyruq/agent ishga tushirish**: O'zingiz xohlagan har qanday CLI agent yoki skriptni custom argumentlar bilan ishga tushirish imkoniyati.
-6. **Istalgan papkadan chaqirish**: `bek-cluster` komandasi orqali qaysi papkada bo'lsangiz, barcha agentlar avtomatik tarzda o'sha papka ichida ish boshlaydi.
+Instead of managing cluttered tmux panes or detached terminal windows, `bek-cluster` unifies your command-line workflow inside a dark, hardware-accelerated web terminal interface.
+
+### Highlights
+
+- **Auto-Detection**: Scans your system environment and provides one-click launching for detected tools (`claude`, `codex`, `antigravity`, `opencode`, `gemini`, `copilot`, `crush`, `pi`, `bash`, or custom binaries).
+- **Simultaneous Multi-Agent Execution**: Run multiple independent agent sessions in parallel on the same project repository.
+- **Spotlight Broadcast Bar**: Floating capsule (`Cmd/Ctrl + K`) allowing you to transmit a prompt to all active agents simultaneously for benchmark comparison or collaborative work.
+- **Dynamic Layout Engine**:
+  - **Vertikal**: Displays up to 3 agents vertically with smooth wheel / arrow navigation.
+  - **Gorizontal**: Displays up to 3 agents side-by-side with mouse wheel horizontal translation.
+  - **Virtual Desktop**: Drag, float, and pinch-resize terminal windows in freeform 2D space.
+  - **Tabs**: Fullscreen single-agent tab switching.
+- **Background Execution & Minimize to Dock**: Collapse any active pane into a compact status icon with the `-` control. Background PTY processes continue executing without interruption.
+- **4-Color Real-Time Status Engine**:
+  - Yellow: Thinking / processing stream
+  - Green: Done / ready / idle
+  - Red: Error / non-zero exit
+  - Blue: Waiting for user confirmation or interactive input
+- **xterm.js + node-pty**: TrueColor, desaturated ANSI palette, cursor blink, resize handling, mouse interactions, and hyperlink support.
 
 ---
 
-## 🚀 O'rnatish va Ishga Tushirish (Installation)
+## Interface Previews
 
-### 1. Proyektni o'rnatish:
+Place your workspace screenshots in `docs/screenshots/`:
+
+| Overview (Desktop Mode) | Spotlight Broadcast & Dynamic Flow |
+| :---: | :---: |
+| ![Desktop Layout](docs/screenshots/overview.png) | ![Broadcast View](docs/screenshots/broadcast.png) |
+
+---
+
+## Installation & Setup
+
+### 1. Install dependencies
 ```bash
 cd /home/bekfurr/BEK-CLUSTER
 npm install
 ```
 
-### 2. Global CLI komanda sifatida ro'yxatdan o'tkazish:
-Global tarzda har qanday papkadan `bek-cluster` deb chaqirish uchun quyidagi komandalardan birini bajaring:
-
+### 2. Link as a global CLI command
 ```bash
-# Variant A (npm link orqali):
+# Option A (npm link):
 npm link
 
-# Yoki Variant B (npm install -g orqali):
+# Option B (global install from local directory):
 npm install -g .
 ```
 
-### 3. Istalgan papkadan ishga tushirish:
-Endi xohlagan loyihangiz papkasiga o'tib, konsolda:
+### 3. Launch from any project folder
 ```bash
 cd /path/to/any/project
 bek-cluster
 ```
-Buyrug'ini bersangiz kifoya! Brauzeringiz avtomatik tarzda ochiladi (`http://127.0.0.1:3888`) va barcha agentlar o'sha loyiha papkasida ishlaydi.
+Your default browser will launch at `http://127.0.0.1:3888` pointing all agents to your current project directory.
 
 ---
 
-## ⚙️ CLI Buyruqlari va Parametrlari (CLI Options)
+## CLI Usage & Flags
 
-```bash
+```text
 Usage: bek-cluster [options]
 
 BEKFURR-AGENT-CLUSTER: Multi-Agent AI Terminal Orchestrator
 
 Options:
-  -v, --version           Joriy versiyani ko'rish
-  -p, --port <number>     Server porti (standart: 3888, agar band bo'lsa avtomatik keyingisiga o'tadi)
-  -H, --host <host>       Bog'lanadigan host (standart: 127.0.0.1)
-  -d, --dir <path>        Agentlar ishlaydigan ishchi papka (standart: joriy papka)
-  --no-open               Brauzerni avtomatik ochmaslik
-  -h, --help              Yordam xabarini ko'rsatish
+  -v, --version           Show current version
+  -p, --port <number>     Server port (default: 3888; auto-increments if busy)
+  -H, --host <host>       Host to bind (default: 127.0.0.1)
+  -d, --dir <path>        Workspace directory for agents (default: current directory)
+  --no-open               Do not open default browser automatically
+  -h, --help              Display help information
 ```
 
-### Misollar:
+### Examples
+
 ```bash
-# Standart ishga tushirish (port 3888, brauzer ochiladi):
+# Standard launch:
 bek-cluster
 
-# Boshqa portda ishga tushirish:
+# Run on a custom port:
 bek-cluster -p 4200
 
-# Aniq bir papka uchun ishga tushirish:
-bek-cluster -d ~/my-react-app
+# Open targeted project repository:
+bek-cluster -d ~/projects/my-web-app
 
-# Brauzersiz fon serveri sifatida ishga tushirish:
+# Headless server mode (e.g. over SSH port-forwarding):
 bek-cluster --no-open
 ```
 
 ---
 
-## 🤖 Qo'llab-quvvatlanadigan Agentlar (Supported Agents)
+## Keyboard Shortcuts
 
-| Agent | Komanda | Tavsif |
+- `Cmd/Ctrl + K`: Toggle floating Spotlight broadcast capsule and focus input
+- `Cmd/Ctrl + 1..6`: Quickly switch focus to window 1 through 6
+- `Arrow Keys` (or `Alt + Arrow`): Smoothly scroll between agents in Vertikal or Gorizontal modes
+- `Mouse Wheel`: Automatically converted to horizontal scrolling in Gorizontal layout
+- `Escape`: Close menus and popover modals
+
+---
+
+## Supported Agents
+
+| Agent | Executable | Description |
 |---|---|---|
-| **Claude Code** | `claude` | Anthropic rasmiy CLI agenti |
-| **Antigravity** | `antigravity` | Google DeepMind agentic coding vositasi |
-| **Codex CLI** | `codex` | OpenAI terminal yordamchisi |
-| **OpenCode** | `opencode` | Open-source avtonom AI coding agenti |
-| **Gemini CLI** | `gemini` | Google Gemini CLI terminal vositasi |
+| **Claude Code** | `claude` | Anthropic official CLI coding agent |
+| **Antigravity** | `antigravity` | Google DeepMind agentic coding system |
+| **Codex CLI** | `codex` | OpenAI terminal assistant |
+| **OpenCode** | `opencode` | Autonomous open-source AI software engineer |
+| **Gemini CLI** | `gemini` | Google Gemini developer terminal tools |
 | **GitHub Copilot** | `copilot` | GitHub Copilot CLI |
-| **Crush CLI** | `crush` | Crush coding yordamchisi |
+| **Crush CLI** | `crush` | Terminal code assistant |
 | **Pi CLI** | `pi` | Personal AI assistant |
-| **Bash Terminal** | `bash` | Standart tizim konsoli |
-| **Custom Command** | *ixtiyoriy* | Istalgan buyruq va argumentlar |
+| **Bash Terminal** | `bash` | Standard system shell session |
+| **Custom Binary** | *custom* | Any command, interpreter, or flags |
 
 ---
 
-## 💡 Maslahatlar va Klaviaturadagi Qulayliklar
+## Architecture
 
-- **Broadcast Prompt**: Yuqoridagi "Broadcast" tugmasi orqali barcha faol agentlarga bir vaqtda topshiriq yuborishingiz mumkin.
-- **Tezkor Promtlar**: Broadcast panelidagi tayyor tugmalar (Review & Find Bugs, Generate Tests, Architecture Overview) orqali 1-klikda barcha agentlarga topshiriq berish mumkin.
-- **Maximize / Focus**: Har bir agent kartasidagi kengaytirish tugmasini bossangiz, o'sha agent butun ekranga kattalashadi; yana bosganda avvalgi holatga qaytadi.
-- **To'xtatish**: Terminalda `Ctrl + C` bosilganda barcha ishlayotgan agentlar va server toza yopiladi.
+- **Backend**: Node.js, Express, WebSocket (`ws`), `node-pty` pseudo-terminal manager.
+- **Frontend**: Vanilla ES6+, `xterm.js`, `xterm-addon-fit`, `xterm-addon-web-links`, CSS visionOS Glassmorphism design system.
+- **Window Management**: Custom virtual desktop manager supporting freeform dragging, 8-way directional resize handles, z-index elevation, and persistent background execution via CSS minimization.
 
 ---
 
-## 📄 Litsenziya
+## License
 
 MIT License © 2026 bekfurr

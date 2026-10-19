@@ -6,39 +6,40 @@ class TerminalView {
     this.containerEl = containerEl;
     this.session = session;
     this.id = session.id;
+    this.options = options;
 
-    // Terminal theme (Tokyo Night / Cyberpunk Dark)
+    // Terminal theme (Minimal Apple Dark + Red Accent)
     const terminalTheme = {
-      background: '#080b11',
-      foreground: '#e2e8f0',
-      cursor: '#06b6d4',
-      cursorAccent: '#080b11',
-      selectionBackground: 'rgba(6, 182, 212, 0.35)',
-      black: '#0f172a',
-      red: '#ef4444',
-      green: '#10b981',
-      yellow: '#f59e0b',
-      blue: '#3b82f6',
-      magenta: '#8b5cf6',
-      cyan: '#06b6d4',
-      white: '#f8fafc',
-      brightBlack: '#475569',
-      brightRed: '#f87171',
-      brightGreen: '#34d399',
-      brightYellow: '#fbbf24',
-      brightBlue: '#60a5fa',
-      brightMagenta: '#a78bfa',
-      brightCyan: '#22d3ee',
-      brightWhite: '#ffffff'
+      background: '#0A0A0B',
+      foreground: '#F5F5F7',
+      cursor: '#E5383B',
+      cursorAccent: '#0A0A0B',
+      selectionBackground: 'rgba(229, 56, 59, 0.25)',
+      black: '#121214',
+      red: '#FF5A5F',
+      green: '#7FD1A0',
+      yellow: '#E8C07D',
+      blue: '#7AA2F7',
+      magenta: '#C792EA',
+      cyan: '#7DCFE0',
+      white: '#F5F5F7',
+      brightBlack: '#636366',
+      brightRed: '#FF6E72',
+      brightGreen: '#95E2B3',
+      brightYellow: '#F2D399',
+      brightBlue: '#93B8FF',
+      brightMagenta: '#D8ABFF',
+      brightCyan: '#96E0EF',
+      brightWhite: '#FFFFFF'
     };
 
     // Instantiate xterm
     this.term = new window.Terminal({
       cursorBlink: true,
       cursorStyle: 'block',
-      fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, monospace',
+      fontFamily: '"SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace',
       fontSize: 13,
-      lineHeight: 1.25,
+      lineHeight: 1.35,
       letterSpacing: 0,
       theme: terminalTheme,
       allowTransparency: true,
@@ -69,6 +70,9 @@ class TerminalView {
     // Send input keystrokes to backend
     this.term.onData((data) => {
       window.wsClient.sendInput(this.id, data);
+      if (this.options.onInput) {
+        this.options.onInput(data);
+      }
     });
 
     // Observe size changes
@@ -81,15 +85,23 @@ class TerminalView {
     window.wsClient.attach(this.id, {
       onOutput: (chunk) => {
         this.term.write(chunk);
+        if (this.options.onOutput) {
+          this.options.onOutput(chunk);
+        }
       },
       onHistory: (historyData) => {
         if (historyData) {
           this.term.write(historyData);
+          if (this.options.onHistory) {
+            this.options.onHistory(historyData);
+          }
         }
       },
       onExit: (code) => {
         this.term.writeln(`\r\n\x1b[90m[Process exited with code ${code}]\x1b[0m`);
-        if (options.onExit) options.onExit(code);
+        if (this.options.onExit) {
+          this.options.onExit(code);
+        }
       }
     });
   }

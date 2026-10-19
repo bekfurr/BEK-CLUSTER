@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BEKFURR AGENT CLUSTER</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f2fe'><path d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+  <title>BEK CLUSTER</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E5383B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect width='18' height='18' x='3' y='3' rx='4'/><path d='m9 10 3 2-3 2'/><line x1='14' y1='14' x2='15' y2='14'/></svg>">
   <link rel="stylesheet" href="/vendor/xterm/xterm.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -13,95 +13,110 @@
     <!-- Top Navigation Bar -->
     <header class="top-nav">
       <div class="nav-left">
+        <!-- Minimal Brand Monogram -->
         <div class="brand">
-          <div class="brand-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" fill="#06B6D4" stroke="#06B6D4"/>
+          <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4"/>
+              <path d="M8 8h8M8 12h5M8 16h8"/>
             </svg>
           </div>
           <div class="brand-text">
-            <span class="brand-name">BEK<span class="highlight">CLUSTER</span></span>
-            <span class="brand-badge">AGENT MATRIX</span>
+            <span class="brand-name">BEK<span class="brand-accent">CLUSTER</span></span>
           </div>
         </div>
 
+        <div class="nav-divider" aria-hidden="true"></div>
+
+        <!-- Current Workspace Directory Pill -->
         <div class="workspace-pill" id="workspaceDisplay" title="Current Workspace Directory">
-          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 8 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
           </svg>
           <span class="pill-text" id="cwdPath">Loading workspace...</span>
         </div>
 
+        <!-- Active Sessions Status -->
         <div class="status-indicator" id="clusterStatusPill">
-          <span class="pulse-dot"></span>
+          <span class="status-dot"></span>
           <span id="activeSessionsCount">0 Active</span>
         </div>
       </div>
 
       <div class="nav-center">
-        <!-- Broadcast Bar Toggle / Bar -->
-        <button id="toggleBroadcastBtn" class="btn btn-glass" title="Toggle Broadcast Prompt Bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m3 11 18-5v12L3 14v-3z"/>
-            <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
-          </svg>
-          <span>Broadcast</span>
-        </button>
+        <!-- macOS Segmented Control Layout Switcher -->
+        <nav class="segmented-control" role="group" aria-label="Layout mode">
+          <button class="seg-btn layout-btn active" data-layout="vertical" title="Vertical Layout (3 visible, scroll/wheel/arrow keys)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="5" rx="1.5"/>
+              <rect x="3" y="9.5" width="18" height="5" rx="1.5"/>
+              <rect x="3" y="16" width="18" height="5" rx="1.5"/>
+            </svg>
+            <span class="seg-label">Vertikal</span>
+          </button>
+          <button class="seg-btn layout-btn" data-layout="horizontal" title="Horizontal Layout (3 visible, scroll/wheel/arrow keys)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="5" height="18" rx="1.5"/>
+              <rect x="9.5" y="3" width="5" height="18" rx="1.5"/>
+              <rect x="16" y="3" width="5" height="18" rx="1.5"/>
+            </svg>
+            <span class="seg-label">Gorizontal</span>
+          </button>
+          <button class="seg-btn layout-btn" data-layout="desktop" title="Virtual Desktop (Freeform drag, resize & float)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="12" height="10" rx="1.5"/>
+              <rect x="9" y="11" width="12" height="10" rx="1.5"/>
+            </svg>
+            <span class="seg-label">Desktop</span>
+          </button>
+          <button class="seg-btn layout-btn" data-layout="tabs" title="Tabbed Fullscreen Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2"/>
+              <path d="M3 9h18M9 4v5"/>
+            </svg>
+            <span class="seg-label">Tabs</span>
+          </button>
+        </nav>
       </div>
 
       <div class="nav-right">
-        <!-- Layout Switcher -->
-        <div class="layout-controls">
-          <button class="btn btn-icon layout-btn active" data-layout="grid" title="Auto Grid Layout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-          </button>
-          <button class="btn btn-icon layout-btn" data-layout="split-2-v" title="Split Vertical (2 Agents)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/>
-            </svg>
-          </button>
-          <button class="btn btn-icon layout-btn" data-layout="split-2-h" title="Split Horizontal (2 Agents)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="13" width="18" height="8" rx="1"/>
-            </svg>
-          </button>
-          <button class="btn btn-icon layout-btn" data-layout="split-3-v" title="Split Triple (3 Agents)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="3" width="5.5" height="18" rx="1"/><rect x="9.25" y="3" width="5.5" height="18" rx="1"/><rect x="16.5" y="3" width="5.5" height="18" rx="1"/>
-            </svg>
-          </button>
-          <button class="btn btn-icon layout-btn" data-layout="tabs" title="Tabbed Fullscreen Mode">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 3v6"/>
-            </svg>
-          </button>
-        </div>
+        <!-- Broadcast Toggle Button -->
+        <button id="toggleBroadcastBtn" class="btn btn-ghost broadcast-toggle" title="Toggle Broadcast Prompt Bar (⌘K)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
+            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+            <circle cx="12" cy="12" r="2"/>
+            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+            <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
+          </svg>
+          <span>Broadcast</span>
+          <kbd class="kbd-shortcut">⌘K</kbd>
+        </button>
 
-        <div class="divider"></div>
+        <div class="nav-divider" aria-hidden="true"></div>
 
-        <!-- Launch Dropdown -->
+        <!-- Launch Dropdown / Menu Popover -->
         <div class="dropdown" id="launchDropdown">
-          <button class="btn btn-primary" id="launchDropdownBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          <button class="btn btn-accent-outline" id="launchDropdownBtn" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             <span>Launch Agent</span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
             </svg>
           </button>
-          <div class="dropdown-menu dropdown-right" id="agentQuickMenu">
+          <div class="dropdown-menu dropdown-right" id="agentQuickMenu" role="menu">
             <div class="dropdown-header">DETECTED AGENTS</div>
             <div id="quickAgentList" class="dropdown-items">
               <!-- Dynamically populated -->
             </div>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item" id="btnCustomAgent">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            <button class="dropdown-item" id="btnCustomAgent" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
               </svg>
               <span>Custom CLI Command...</span>
             </button>
@@ -109,54 +124,20 @@
         </div>
 
         <!-- Global Actions -->
-        <button id="btnKillAll" class="btn btn-danger-ghost btn-icon" title="Kill All Running Agents">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
-            <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        <button id="btnKillAll" class="btn btn-icon btn-ghost btn-danger-hover" title="Stop All Agents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <rect x="9" y="9" width="6" height="6" rx="1"/>
           </svg>
         </button>
 
-        <button id="btnFullscreen" class="btn btn-icon btn-glass" title="Toggle Fullscreen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btnFullscreen" class="btn btn-icon btn-ghost" title="Toggle Fullscreen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
           </svg>
         </button>
       </div>
     </header>
-
-    <!-- Broadcast Prompt Bar (Collapsible) -->
-    <div id="broadcastBar" class="broadcast-bar">
-      <div class="broadcast-inner">
-        <div class="broadcast-prefix">
-          <span class="broadcast-pulse"></span>
-          <span class="broadcast-title">BROADCAST PROMPT</span>
-        </div>
-        <div class="broadcast-input-wrapper">
-          <input type="text" id="broadcastInput" placeholder="Send prompt to all active agents at once (e.g. 'Audit this repo for security vulnerabilities')..." autocomplete="off">
-        </div>
-        <div class="broadcast-target">
-          <select id="broadcastTargetSelect">
-            <option value="all">Target: All Active Agents</option>
-          </select>
-        </div>
-        <div class="broadcast-actions">
-          <button id="btnSendBroadcast" class="btn btn-accent">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-            <span>Transmit</span>
-          </button>
-        </div>
-      </div>
-      <!-- Quick Prompt Pills -->
-      <div class="broadcast-suggestions">
-        <span class="suggestion-label">Quick Prompts:</span>
-        <button class="prompt-chip" data-prompt="Analyze the architecture and key files of this repository">Architecture Overview</button>
-        <button class="prompt-chip" data-prompt="Review the code for potential bugs, edge cases, and performance bottlenecks">Review & Find Bugs</button>
-        <button class="prompt-chip" data-prompt="Write comprehensive unit tests with edge case coverage">Generate Tests</button>
-        <button class="prompt-chip" data-prompt="Refactor the main logic for clean code and clarity">Refactor Code</button>
-      </div>
-    </div>
 
     <!-- Tabs Strip (Visible only in Tabs mode) -->
     <div id="tabsStrip" class="tabs-strip" style="display: none;">
@@ -164,32 +145,42 @@
         <!-- Dynamically rendered tabs -->
       </div>
       <button class="btn btn-icon btn-sm btn-ghost" id="tabAddAgentBtn" title="Launch New Agent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
       </button>
     </div>
 
     <!-- Main Workspace Container -->
-    <main id="workspaceContainer" class="workspace-grid layout-grid">
+    <main id="workspaceContainer" class="workspace-grid layout-vertical">
       <!-- Empty State (Shown when 0 sessions) -->
       <div id="emptyState" class="empty-state">
         <div class="empty-state-card">
-          <div class="empty-hero-icon">
-            <div class="icon-ring ring-1"></div>
-            <div class="icon-ring ring-2"></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+          <div class="empty-hero-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4"/>
+              <path d="m9 10 3 2-3 2"/>
+              <line x1="14" y1="14" x2="15" y2="14"/>
             </svg>
           </div>
-          <h1 class="empty-title">BEKFURR AGENT CLUSTER</h1>
+          <h1 class="empty-title">BEK CLUSTER</h1>
           <p class="empty-subtitle">
             Orchestrate multiple AI coding agents side-by-side in your workspace.
-            Run Claude Code, Codex, Antigravity, OpenCode, and terminals simultaneously in one unified window.
           </p>
 
+          <div class="empty-action-row">
+            <button class="btn btn-primary btn-large" id="emptyLaunchPrimaryBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>Launch First Agent</span>
+            </button>
+          </div>
+
           <div class="detected-agents-section">
-            <h3 class="section-heading">AVAILABLE AGENTS IN YOUR SYSTEM</h3>
+            <div class="section-heading">AVAILABLE AGENTS</div>
             <div class="agent-cards-grid" id="emptyAgentCards">
               <!-- Dynamically populated cards -->
             </div>
@@ -203,36 +194,83 @@
       </div>
     </main>
 
-    <!-- Custom Agent Modal -->
-    <div id="customAgentModal" class="modal-overlay" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+    <!-- Floating Spotlight Broadcast Bar -->
+    <div id="broadcastBar" class="broadcast-floating-bar">
+      <div class="broadcast-capsule">
+        <div class="broadcast-prefix" aria-hidden="true">
+          <span class="broadcast-indicator"></span>
+          <span class="broadcast-label">Broadcast</span>
+        </div>
+        <div class="broadcast-input-wrapper">
+          <input type="text" id="broadcastInput" placeholder="Transmit prompt to agents simultaneously... (Enter)" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="broadcast-target">
+          <select id="broadcastTargetSelect" title="Select Target Agents">
+            <option value="all">All Agents</option>
+          </select>
+        </div>
+        <div class="broadcast-actions">
+          <button id="btnSendBroadcast" class="btn btn-accent btn-transmit" title="Send Broadcast Prompt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
-            <span>Launch Custom Command / Agent</span>
+            <span>Transmit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Prompt Chips -->
+      <div class="broadcast-suggestions">
+        <span class="suggestion-label">Quick Prompts:</span>
+        <button class="prompt-chip" data-prompt="Analyze the architecture and key files of this repository">Architecture Overview</button>
+        <button class="prompt-chip" data-prompt="Review the code for potential bugs, edge cases, and performance bottlenecks">Review & Find Bugs</button>
+        <button class="prompt-chip" data-prompt="Write comprehensive unit tests with edge case coverage">Generate Tests</button>
+        <button class="prompt-chip" data-prompt="Refactor the main logic for clean code and clarity">Refactor Code</button>
+      </div>
+    </div>
+
+    <!-- Minimized Agents Dock (macOS Style Dock) -->
+    <div id="minimizedDock" class="minimized-dock" aria-label="Minimized Agents Dock">
+      <!-- Minimized agent tiles dynamically inserted here -->
+    </div>
+
+    <!-- Custom Agent Modal / Sheet -->
+    <div id="customAgentModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="customModalTitle">
+        <div class="modal-header">
+          <div class="modal-title" id="customModalTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            <span>Launch Custom Agent</span>
           </div>
-          <button class="modal-close" id="closeCustomModalBtn">&times;</button>
+          <button class="modal-close" id="closeCustomModalBtn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
         <form id="customAgentForm">
           <div class="modal-body">
             <div class="form-group">
-              <label for="customCommandInput">Executable Command or Agent Binary:</label>
-              <input type="text" id="customCommandInput" placeholder="e.g. claude, codex, python3, bash, htop" required autofocus>
+              <label for="customCommandInput">Executable Command or Agent Binary</label>
+              <input type="text" id="customCommandInput" placeholder="e.g. claude, codex, python3, bash" required autofocus spellcheck="false">
               <span class="form-hint">Any CLI binary or agent installed on your machine.</span>
             </div>
             <div class="form-group">
-              <label for="customArgsInput">Arguments (Optional, space-separated):</label>
-              <input type="text" id="customArgsInput" placeholder="e.g. --dangerously-skip-permissions">
+              <label for="customArgsInput">Arguments (Optional, space-separated)</label>
+              <input type="text" id="customArgsInput" placeholder="e.g. --dangerously-skip-permissions" spellcheck="false">
             </div>
             <div class="form-group">
-              <label for="customNameInput">Display Title (Optional):</label>
+              <label for="customNameInput">Display Title (Optional)</label>
               <input type="text" id="customNameInput" placeholder="e.g. Claude Security Auditor">
             </div>
             <div class="form-group">
-              <label for="customCwdInput">Working Directory:</label>
-              <input type="text" id="customCwdInput" value="">
+              <label for="customCwdInput">Working Directory</label>
+              <input type="text" id="customCwdInput" value="" spellcheck="false">
               <span class="form-hint">Defaults to cluster workspace directory.</span>
             </div>
           </div>
