@@ -116,6 +116,7 @@ html, body {
    ========================================================================== */
 
 .top-nav {
+  position: relative;
   height: 52px;
   min-height: 52px;
   display: flex;
@@ -127,7 +128,7 @@ html, body {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  z-index: 50;
+  z-index: 1000;
 }
 
 .nav-left, .nav-center, .nav-right {
@@ -430,6 +431,10 @@ html, body {
   position: relative;
 }
 
+.dropdown.open {
+  z-index: 1050;
+}
+
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -443,7 +448,7 @@ html, body {
   display: none;
   flex-direction: column;
   padding: 6px;
-  z-index: 100;
+  z-index: 1100;
   overflow: hidden;
   animation: menu-slide 180ms var(--ease-apple);
 }
@@ -552,6 +557,7 @@ html, body {
    ========================================================================== */
 
 .tabs-strip {
+  position: relative;
   height: 38px;
   min-height: 38px;
   background: rgba(18, 18, 20, 0.6);
@@ -560,7 +566,7 @@ html, body {
   align-items: center;
   padding: 0 var(--space-3);
   gap: var(--space-2);
-  z-index: 45;
+  z-index: 990;
 }
 
 .tabs-scroll-area {
@@ -768,6 +774,130 @@ html, body {
 /* Minimized State */
 .terminal-card.minimized {
   display: none !important;
+}
+
+/* In Desktop mode, minimized windows become draggable icon widgets directly on the desktop */
+.layout-desktop .terminal-card.minimized {
+  display: flex !important;
+  position: absolute !important;
+  width: 78px !important;
+  height: 84px !important;
+  min-width: 78px !important;
+  min-height: 84px !important;
+  padding: 6px;
+  background: rgba(18, 18, 20, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  cursor: grab !important;
+  user-select: none;
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: transform var(--duration-fast) var(--ease-apple),
+              box-shadow var(--duration-fast) var(--ease-apple),
+              border-color var(--duration-fast) var(--ease-apple);
+}
+
+.layout-desktop .terminal-card.minimized:active {
+  cursor: grabbing !important;
+  transform: scale(0.97);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.75) !important;
+}
+
+.layout-desktop .terminal-card.minimized:hover {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(26, 26, 29, 0.95) !important;
+}
+
+/* Hide normal window chrome when minimized on desktop */
+.layout-desktop .terminal-card.minimized .card-header,
+.layout-desktop .terminal-card.minimized .card-body,
+.layout-desktop .terminal-card.minimized .resize-handle {
+  display: none !important;
+}
+
+/* Desktop icon widget body */
+.desktop-icon-widget {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 4px;
+}
+
+.layout-desktop .terminal-card.minimized .desktop-icon-widget {
+  display: flex !important;
+}
+
+.desktop-icon-glyph {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.desktop-icon-glyph svg {
+  width: 22px;
+  height: 22px;
+}
+
+.desktop-icon-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 68px;
+  text-align: center;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+}
+
+.desktop-icon-status {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #0A0A0B;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  transition: background-color var(--duration-fast) var(--ease-apple);
+}
+
+.desktop-icon-status.state-thinking {
+  background: #E8C07D;
+  box-shadow: 0 0 8px #E8C07D;
+  animation: status-pulse-yellow 1.4s infinite ease-in-out;
+}
+
+.desktop-icon-status.state-done {
+  background: #7FD1A0;
+  box-shadow: 0 0 6px #7FD1A0;
+}
+
+.desktop-icon-status.state-error {
+  background: #FF5A5F;
+  box-shadow: 0 0 6px #FF5A5F;
+}
+
+.desktop-icon-status.state-waiting {
+  background: #7AA2F7;
+  box-shadow: 0 0 9px #7AA2F7;
+  animation: status-pulse-blue 1.2s infinite ease-in-out;
 }
 
 /* Focus State: Thin Red Ring + Soft Red Glow */
@@ -1002,7 +1132,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  z-index: 95;
+  z-index: 960;
   padding: 4px 6px;
   background: rgba(18, 18, 20, 0.88);
   backdrop-filter: blur(24px) saturate(180%);
@@ -1116,7 +1246,7 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   width: min(720px, calc(100vw - 32px));
-  z-index: 100;
+  z-index: 950;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -1425,7 +1555,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   padding: var(--space-4);
 }
 
@@ -1560,7 +1690,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  z-index: 1000;
+  z-index: 2100;
   pointer-events: none;
 }
 

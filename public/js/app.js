@@ -14,6 +14,7 @@
     minimizedSessions: new Set(),
     sessionStatuses: new Map(), // sessionId -> 'thinking' | 'done' | 'error' | 'waiting'
     desktopBounds: new Map(),   // sessionId -> { x, y, w, h }
+    desktopIconPositions: new Map(), // sessionId -> { x, y } (Draggable Minimized Icons)
     topZIndex: 10,
     broadcastOpen: true
   };
@@ -232,6 +233,12 @@
       cardDot.title = `${labels[status] || status}`;
     }
 
+    // Update desktop minimized icon status dot
+    const desktopDot = document.getElementById(`desktop-status-${sessionId}`);
+    if (desktopDot) {
+      desktopDot.className = `desktop-icon-status state-${status}`;
+    }
+
     // Update dock status dot if minimized
     const dockDot = document.getElementById(`dock-status-${sessionId}`);
     if (dockDot) {
@@ -263,6 +270,15 @@
     const item = state.sessions.get(sessionId);
     if (!item) return;
     state.topZIndex += 1;
+    // Cap at 850 so windows never occlude top-nav (1000) or launch menu (1100)
+    if (state.topZIndex > 850) {
+      state.topZIndex = 11;
+      for (const [id, s] of state.sessions.entries()) {
+        if (id !== sessionId) {
+          s.cardEl.style.zIndex = '10';
+        }
+      }
+    }
     item.cardEl.style.zIndex = String(state.topZIndex);
   }
 
@@ -359,6 +375,14 @@
       </div>
       <div class="card-body">
         <div class="terminal-wrapper" id="term-wrap-${session.id}"></div>
+      </div>
+      <!-- Virtual Desktop Minimized Draggable Icon View -->
+      <div class="desktop-icon-widget" id="desktop-icon-${session.id}" title="${session.agentName} (Click to Restore, Drag to Reposition)">
+        <span class="desktop-icon-status state-done" id="desktop-status-${session.id}"></span>
+        <div class="desktop-icon-glyph" style="color: ${color};">
+          ${iconSvg}
+        </div>
+        <span class="desktop-icon-label">${session.agentName}</span>
       </div>
       <!-- Virtual Desktop Resize Handles (8 Directions) -->
       <div class="resize-handle rh-e" data-dir="e"></div>
@@ -473,8 +497,9 @@
       view.focus();
     });
 
-    // 6. Setup Desktop Window Drag & Pinch-Resize
+    // 6. Setup Desktop Window Drag & Pinch-Resize + Minimized Desktop Icon Drag
     setupDesktopWindowControls(cardEl, session.id, view);
+    setupDesktopIconControls(cardEl, session.id);
 
     // Initial status: done/ready
     setSessionStatus(session.id, 'done');
@@ -649,6 +674,62 @@
   }
 
   /**
+   * Setup Dragging & Restoring for Minimized Desktop Icon Widget
+   */
+  function setupDesktopIconControls(cardEl, sessionId) {
+    const iconWidget = cardEl.querySelector('.desktop-icon-widget');
+    if (!iconWidget) return;
+
+    iconWidget.addEventListener('mousedown', (e) => {
+      if (state.activeLayout !== 'desktop' || !cardEl.classList.contains('minimized')) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      bringToFront(sessionId);
+
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      const rect = cardEl.getBoundingClientRect();
+      const parentRect = elements.terminalsContainer.getBoundingClientRect();
+
+      const startLeft = rect.left - parentRect.left;
+      const startTop = rect.top - parentRect.top;
+
+      let hasMoved = false;
+
+      function onMouseMove(moveEvent) {
+        const dx = moveEvent.clientX - startMouseX;
+        const dy = moveEvent.clientY - startMouseY;
+
+        if (Math.hypot(dx, dy) > 4) {
+          hasMoved = true;
+        }
+
+        const newLeft = Math.max(8, Math.min(parentRect.width - 86, startLeft + dx));
+        const newTop = Math.max(8, Math.min(parentRect.height - 92, startTop + dy));
+
+        cardEl.style.left = `${newLeft}px`;
+        cardEl.style.top = `${newTop}px`;
+
+        state.desktopIconPositions.set(sessionId, { x: newLeft, y: newTop });
+      }
+
+      function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        if (!hasMoved) {
+          // Simple click on icon restores window back to normal size
+          restoreSession(sessionId);
+        }
+      }
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  /**
    * Apply desktop positioning to card
    */
   function applyDesktopBounds(cardEl, sessionId) {
@@ -671,7 +752,7 @@
   }
 
   /**
-   * Minimize session to Dock ("-" function)
+   * Minimize session to Dock or Desktop Draggable Icon ("-" function)
    */
   function minimizeSession(sessionId) {
     const item = state.sessions.get(sessionId);
@@ -684,6 +765,21 @@
     if (state.maximizedId === sessionId) {
       item.cardEl.classList.remove('maximized');
       state.maximizedId = null;
+    }
+
+    if (state.activeLayout === 'desktop') {
+      // In Desktop mode, position the minimized icon widget directly on desktop
+      const currentBounds = state.desktopBounds.get(sessionId) || { x: 30, y: 20 };
+      const iconPos = state.desktopIconPositions.get(sessionId) || { x: currentBounds.x, y: currentBounds.y };
+      item.cardEl.style.left = `${iconPos.x}px`;
+      item.cardEl.style.top = `${iconPos.y}px`;
+      item.cardEl.style.width = '';
+      item.cardEl.style.height = '';
+      state.desktopIconPositions.set(sessionId, iconPos);
+      bringToFront(sessionId);
+      showToast(`${item.session.agentName} minimized to desktop`);
+    } else {
+      showToast(`${item.session.agentName} minimized to dock`);
     }
 
     renderMinimizedDock();
@@ -700,11 +796,10 @@
     }
 
     refitAll();
-    showToast(`${item.session.agentName} minimized to dock`);
   }
 
   /**
-   * Restore session from Dock
+   * Restore session from Dock or Desktop Icon
    */
   function restoreSession(sessionId) {
     const item = state.sessions.get(sessionId);
@@ -928,7 +1023,16 @@
     // Reset or Apply Bounds
     for (const [id, item] of state.sessions.entries()) {
       if (layout === 'desktop') {
-        applyDesktopBounds(item.cardEl, id);
+        if (state.minimizedSessions.has(id)) {
+          const currentBounds = state.desktopBounds.get(id) || { x: 30, y: 20 };
+          const iconPos = state.desktopIconPositions.get(id) || { x: currentBounds.x, y: currentBounds.y };
+          item.cardEl.style.left = `${iconPos.x}px`;
+          item.cardEl.style.top = `${iconPos.y}px`;
+          item.cardEl.style.width = '';
+          item.cardEl.style.height = '';
+        } else {
+          applyDesktopBounds(item.cardEl, id);
+        }
       } else {
         clearDesktopBounds(item.cardEl);
       }
@@ -1282,6 +1386,46 @@
     // Window resize refit
     window.addEventListener('resize', () => {
       refitAll();
+    });
+
+    // Setup Draggable Floating Dock
+    setupDockDraggable();
+  }
+
+  /**
+   * Allow dragging the minimized dock anywhere on the screen
+   */
+  function setupDockDraggable() {
+    if (!elements.minimizedDock) return;
+
+    elements.minimizedDock.addEventListener('mousedown', (e) => {
+      // If clicking directly on a dock item without moving, don't drag dock
+      if (e.target.closest('.dock-item')) return;
+
+      const rect = elements.minimizedDock.getBoundingClientRect();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startLeft = rect.left;
+      const startTop = rect.top;
+
+      function onMouseMove(moveEvent) {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+
+        if (Math.hypot(dx, dy) > 4) {
+          elements.minimizedDock.style.left = `${Math.max(10, Math.min(window.innerWidth - rect.width - 10, startLeft + dx))}px`;
+          elements.minimizedDock.style.bottom = 'auto';
+          elements.minimizedDock.style.top = `${Math.max(60, Math.min(window.innerHeight - rect.height - 10, startTop + dy))}px`;
+        }
+      }
+
+      function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      }
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
     });
   }
 
