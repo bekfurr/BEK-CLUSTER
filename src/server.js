@@ -121,6 +121,9 @@ function createServer(options = {}) {
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
+    if (session.error) {
+      return res.status(400).json({ error: session.error });
+    }
     res.json({ session });
   });
 

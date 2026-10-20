@@ -1,14 +1,15 @@
 {
   "name": "bek-cluster",
   "version": "1.0.0",
-  "description": "BEKFURR AGENT CLUSTER - Run multiple AI agents (Claude Code, Codex, Antigravity, OpenCode, Gemini, etc.) concurrently in one web interface",
+  "description": "BEKFURR AGENT CLUSTER - Run multiple AI agents (Claude Code, Codex, Antigravity CLI (agy), OpenCode, etc.) concurrently in one web interface",
   "main": "src/server.js",
   "bin": {
     "bek-cluster": "./bin/bek-cluster.js"
   },
   "scripts": {
     "start": "node ./bin/bek-cluster.js",
-    "dev": "node ./bin/bek-cluster.js --no-open"
+    "dev": "node ./bin/bek-cluster.js --no-open",
+    "postinstall": "node scripts/ensure-pty.js"
   },
   "keywords": [
     "ai",
@@ -20,6 +21,7 @@
     "claude-code",
     "codex",
     "antigravity",
+    "agy",
     "opencode",
     "cli"
   ],
@@ -41,6 +43,7 @@
     "bin",
     "src",
     "public",
+    "scripts",
     "README.md",
     "LICENSE"
   ],

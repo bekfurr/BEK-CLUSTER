@@ -51,27 +51,115 @@ Place your workspace screenshots in `docs/screenshots/`:
 
 ## Installation & Setup
 
-### 1. Install dependencies
+`bek-cluster` utilizes high-performance native pseudo-terminal bindings (`node-pty`) for responsive, low-latency streaming between web browsers and AI CLI processes. 
+
+Thanks to our built-in `.npmrc` configuration and self-healing `scripts/ensure-pty.js`, installation runs out-of-the-box on Linux, macOS, and Windows.
+
+---
+
+### Prerequisites by Platform
+
+Ensure **Node.js (v18.0.0 or higher)** and a standard C++ compiler toolchain are present on your machine:
+
+#### 🐧 Linux (Ubuntu, Debian, Fedora, Arch)
 ```bash
-cd /home/bekfurr/BEK-CLUSTER
-npm install
+# Ubuntu / Debian / Pop!_OS:
+sudo apt update && sudo apt install -y build-essential python3 make g++
+
+# Fedora / RHEL:
+sudo dnf groupinstall "Development Tools" && sudo dnf install -y python3
+
+# Arch Linux / Manjaro:
+sudo pacman -S --needed base-devel python
 ```
 
-### 2. Link as a global CLI command
+#### 🍏 macOS (Intel & Apple Silicon M1/M2/M3/M4)
+Ensure Xcode Command Line Tools are active:
 ```bash
-# Option A (npm link):
+xcode-select --install
+```
+
+#### 🪟 Windows (10 / 11)
+Run PowerShell as Administrator and verify build tools are installed:
+```powershell
+# Option 1 (Winget - Recommended):
+winget install Microsoft.VisualStudio.2022.BuildTools --override "--passive --config DesktopCpp"
+
+# Option 2 (via npm in admin PowerShell):
+npm install --global --production windows-build-tools
+```
+
+---
+
+### Step-by-Step Installation
+
+#### 1. Clone the repository
+```bash
+git clone https://github.com/BEKFURR/BEK-CLUSTER.git
+cd BEK-CLUSTER
+```
+
+#### 2. Install dependencies
+```bash
+npm install
+```
+> **Note**: Our configured `.npmrc` (`allow-scripts=node-pty`) permits `node-pty` to compile automatically. Our automated postinstall self-healing script (`ensure-pty.js`) verifies and binds the native PTY engine without requiring manual confirmation prompts.
+
+#### 3. Link globally as a system CLI
+Choose either option to make the `bek-cluster` command available in any directory:
+
+```bash
+# Option A: Standard npm link (Recommended for developers)
 npm link
 
-# Option B (global install from local directory):
+# Option B: Global install from repository source
 npm install -g .
 ```
 
-### 3. Launch from any project folder
+#### 4. Launch in any project
+Navigate to any repository or directory where you want your AI agents to operate, then launch:
 ```bash
-cd /path/to/any/project
+cd /path/to/your/project
 bek-cluster
 ```
-Your default browser will launch at `http://127.0.0.1:3888` pointing all agents to your current project directory.
+Your default browser will immediately open `http://127.0.0.1:3888` connected to your workspace.
+
+---
+
+### Troubleshooting & Common Fixes
+
+<details>
+<summary><b>1. EACCES / Permission denied during global install on Linux/macOS</b></summary>
+
+Avoid running `sudo npm install -g`. Instead, configure npm's default global directory to your user home:
+```bash
+mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc # or ~/.zshrc
+source ~/.bashrc # or source ~/.zshrc
+npm link
+```
+</details>
+
+<details>
+<summary><b>2. Windows PowerShell script execution policy error</b></summary>
+
+If Windows blocks running `bek-cluster`, run PowerShell as Administrator and enable local scripts:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+</details>
+
+<details>
+<summary><b>3. Native binding mismatch after Node.js version upgrade</b></summary>
+
+If you switch Node.js versions (e.g. via `nvm`, `mise`, or `fnm`), trigger a clean rebuild:
+```bash
+npm run postinstall
+# or manually:
+npm rebuild node-pty
+```
+</details>
 
 ---
 
@@ -124,10 +212,9 @@ bek-cluster --no-open
 | Agent | Executable | Description |
 |---|---|---|
 | **Claude Code** | `claude` | Anthropic official CLI coding agent |
-| **Antigravity** | `antigravity` | Google DeepMind agentic coding system |
+| **Antigravity CLI** | `agy` | Google DeepMind Antigravity CLI coding assistant |
 | **Codex CLI** | `codex` | OpenAI terminal assistant |
 | **OpenCode** | `opencode` | Autonomous open-source AI software engineer |
-| **Antigravity CLI** | `agy` | Google DeepMind Antigravity CLI coding assistant |
 | **GitHub Copilot** | `copilot` | GitHub Copilot CLI |
 | **Crush CLI** | `crush` | Terminal code assistant |
 | **Pi CLI** | `pi` | Personal AI assistant |

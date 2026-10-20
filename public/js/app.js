@@ -987,6 +987,42 @@
   }
 
   /**
+   * Clamp desktop coordinates so windows never stick to or exceed the right/bottom viewport
+   */
+  function clampDesktopBounds() {
+    if (state.activeLayout !== 'desktop') return;
+    const parent = elements.terminalsContainer;
+    if (!parent) return;
+    const parentRect = parent.getBoundingClientRect();
+    if (parentRect.width < 100 || parentRect.height < 100) return;
+
+    for (const [sessionId, bounds] of state.desktopBounds.entries()) {
+      if (state.maximizedId === sessionId) continue;
+      const item = state.sessions.get(sessionId);
+      if (!item) continue;
+
+      const maxW = Math.max(340, parentRect.width - 20);
+      const maxH = Math.max(220, parentRect.height - 20);
+      const w = Math.min(bounds.w || 640, maxW);
+      const h = Math.min(bounds.h || 440, maxH);
+
+      const maxX = Math.max(0, parentRect.width - w - 10);
+      const maxY = Math.max(0, parentRect.height - h - 10);
+
+      const x = Math.min(Math.max(10, bounds.x), maxX);
+      const y = Math.min(Math.max(10, bounds.y), maxY);
+
+      state.desktopBounds.set(sessionId, { x, y, w, h });
+      if (!state.minimizedSessions.has(sessionId)) {
+        item.cardEl.style.left = `${x}px`;
+        item.cardEl.style.top = `${y}px`;
+        item.cardEl.style.width = `${w}px`;
+        item.cardEl.style.height = `${h}px`;
+      }
+    }
+  }
+
+  /**
    * Reset inline position styles when leaving desktop layout
    */
   function clearDesktopBounds(cardEl) {
@@ -1227,7 +1263,11 @@
 
     try {
       const res = await window.API.restartSession(sessionId, newCwd);
-      if (res.session) {
+      if (res && res.error) {
+        showToast(res.error, 'error');
+        return;
+      }
+      if (res && res.session) {
         item.session = res.session;
         const pill = item.cardEl.querySelector('.pane-cwd-pill');
         if (pill) {
@@ -1235,10 +1275,12 @@
           const textEl = pill.querySelector('.pane-cwd-text');
           if (textEl) textEl.textContent = formatCwdShort(res.session.cwd);
         }
+        item.view.clear();
+        item.view.fit();
+        item.view.focus();
         setSessionStatus(sessionId, 'thinking');
         setTimeout(() => setSessionStatus(sessionId, 'done'), 1500);
         setFocus(sessionId);
-        item.view.focus();
         showToast(`Directory updated & ${item.session.agentName} restarted`, 'success');
       }
     } catch (err) {
@@ -1343,18 +1385,23 @@
     if (elements.usageSessionsTableBody) {
       elements.usageSessionsTableBody.innerHTML = '';
       if (sessionsList.length === 0) {
-        elements.usageSessionsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">No agent window activity recorded yet</td></tr>';
+        elements.usageSessionsTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">No agent window activity recorded yet</td></tr>';
       } else {
         sessionsList.forEach(sess => {
           const tr = document.createElement('tr');
           const isCurrentlyActive = state.sessions.has(sess.id) && sess.status === 'running';
-          const timeStr = sess.lastActiveAt ? new Date(sess.lastActiveAt).toLocaleTimeString() : (sess.startedAt ? new Date(sess.startedAt).toLocaleTimeString() : '-');
+
+          const dateObj = new Date(sess.lastActiveAt || sess.startedAt);
+          const dateFormatted = !isNaN(dateObj.getTime())
+            ? `${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+            : '-';
 
           const statusBadge = isCurrentlyActive
             ? `<span class="usage-tag-explicit" style="background:rgba(127,209,160,0.15);color:#7FD1A0;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#7FD1A0;"></span>Active</span>`
             : `<span class="usage-tag-heuristic" style="background:rgba(255,255,255,0.06);color:var(--text-muted);">Exited</span>`;
 
           tr.innerHTML = `
+            <td style="color:var(--text-dim);font-size:10px;">${dateFormatted}</td>
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
                 <strong>${sess.agentName || 'Agent'}</strong>
@@ -1368,7 +1415,6 @@
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
                 ${statusBadge}
-                <span style="color:var(--text-muted);font-size:10px;">${timeStr}</span>
               </div>
             </td>
           `;
@@ -1473,8 +1519,18 @@
     } else {
       if (state.maximizedId) {
         const old = state.sessions.get(state.maximizedId);
-        if (old) old.cardEl.classList.remove('maximized');
+        if (old) {
+          old.cardEl.classList.remove('maximized');
+          if (state.activeLayout === 'desktop') {
+            applyDesktopBounds(old.cardEl, state.maximizedId);
+          }
+        }
       }
+      // Clear inline desktop coordinates when maximizing so they don't override .maximized fixed bounds
+      item.cardEl.style.left = '';
+      item.cardEl.style.top = '';
+      item.cardEl.style.width = '';
+      item.cardEl.style.height = '';
       item.cardEl.classList.add('maximized');
       state.maximizedId = sessionId;
       setFocus(sessionId);
@@ -1959,9 +2015,17 @@
       }, { passive: false });
     }
 
-    // Window resize refit
+    // Window resize & fullscreen refit with desktop bounds clamping
     window.addEventListener('resize', () => {
+      clampDesktopBounds();
       refitAll();
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      setTimeout(() => {
+        clampDesktopBounds();
+        refitAll();
+      }, 150);
     });
 
     // Setup Draggable Floating Dock

@@ -1,5 +1,6 @@
 const pty = require('node-pty');
 const path = require('path');
+const fs = require('fs');
 const { getAgentProfile } = require('./agents');
 const usageManager = require('./usage-manager');
 
@@ -171,6 +172,19 @@ class TerminalManager {
     const oldSession = this.sessions.get(sessionId);
     if (!oldSession) return null;
 
+    let targetCwd = oldSession.cwd;
+    if (newCwd && typeof newCwd === 'string') {
+      try {
+        const resolved = path.resolve(newCwd.trim());
+        if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+          return { error: `Directory does not exist or is not a directory: ${newCwd}` };
+        }
+        targetCwd = resolved;
+      } catch (err) {
+        return { error: `Invalid directory path: ${err.message}` };
+      }
+    }
+
     // Terminate old process if running
     if (oldSession.pty && oldSession.status === 'running') {
       try {
@@ -180,15 +194,9 @@ class TerminalManager {
       }
     }
 
+    oldSession.cwd = targetCwd;
     const command = oldSession.command;
     const args = oldSession.args;
-    if (newCwd && typeof newCwd === 'string') {
-      try {
-        oldSession.cwd = path.resolve(newCwd);
-      } catch (e) {
-        // fallback to existing
-      }
-    }
     const cwd = oldSession.cwd;
     const cols = oldSession.cols;
     const rows = oldSession.rows;
@@ -268,13 +276,14 @@ class TerminalManager {
     if (session.pty && session.status === 'running') {
       try {
         session.pty.kill('SIGTERM');
-        setTimeout(() => {
+        const killTimer = setTimeout(() => {
           try {
             if (session.pty && session.status === 'running') {
               session.pty.kill('SIGKILL');
             }
           } catch (e) {}
         }, 500);
+        if (killTimer.unref) killTimer.unref();
       } catch (err) {
         console.error(`[TerminalManager] Error killing session ${sessionId}:`, err);
       }

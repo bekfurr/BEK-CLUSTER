@@ -2,6 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+function parseTokenCount(str) {
+  if (!str) return 0;
+  const clean = String(str).replace(/,/g, '').trim().toLowerCase();
+  if (clean.endsWith('k')) {
+    return Math.round(parseFloat(clean) * 1000) || 0;
+  }
+  if (clean.endsWith('m')) {
+    return Math.round(parseFloat(clean) * 1000000) || 0;
+  }
+  return parseInt(clean, 10) || 0;
+}
+
 class UsageManager {
   constructor() {
     this.storageDir = path.join(os.homedir(), '.bek-cluster');
@@ -75,15 +87,13 @@ class UsageManager {
   getDefaultModel(agentId) {
     const map = {
       agy: 'agy/gemini-3.8-flash-high',
-      antigravity: 'antigravity-deepmind',
       claude: 'claude-3-7-sonnet',
       codex: 'openai/gpt-4o',
       opencode: 'opencode-v1',
       copilot: 'copilot/gpt-4o',
       deepseek: 'deepseek-v3',
       pi: 'pi-inflection',
-      crush: 'crush-coder',
-      bash: 'system-shell'
+      crush: 'crush-coder'
     };
     return map[agentId] || 'custom-model';
   }
@@ -150,6 +160,13 @@ class UsageManager {
   sniffOutput(sessionId, agent, textChunk) {
     if (!textChunk || typeof textChunk !== 'string') return;
 
+    // Guard: System shells never consume LLM tokens
+    const agentCategory = agent?.profile?.category || agent?.category;
+    const agentId = agent?.agentId || agent?.id;
+    if (agentCategory === 'shell' || agentId === 'bash') {
+      return;
+    }
+
     // Accumulate history for context-aware model and token extraction
     let buf = (this.streamAccumulators.get(sessionId) || '') + textChunk;
     if (buf.length > 60000) {
@@ -160,7 +177,7 @@ class UsageManager {
     // 1. Detect Model
     let detectedModel = this.detectModelFromText(textChunk) || this.detectModelFromText(buf);
     if (!detectedModel) {
-      detectedModel = this.sessionModels.get(sessionId) || this.getDefaultModel(agent?.agentId || agent?.id);
+      detectedModel = this.sessionModels.get(sessionId) || this.getDefaultModel(agentId);
     }
 
     // 2. Detect Tokens
@@ -169,20 +186,38 @@ class UsageManager {
     let completionTokens = 0;
     let foundExplicitTokens = false;
 
-    // Pattern A: "Input tokens: 1,234 ... Output tokens: 567"
-    const inOutMatch = textChunk.match(/(?:input|prompt)\s*tokens?[:=]?\s*([0-9,]+)[^\n\r]*(?:output|completion)\s*tokens?[:=]?\s*([0-9,]+)/i);
+    // Pattern 1: Antigravity / Gemini billing or parameter summary
+    // e.g. "prompt_tokens: 1,234 ... completion_tokens: 567" or "input tokens: 1.2k ... output tokens: 300"
+    // or reverse order: "1,250 prompt tokens, 450 completion tokens"
+    const inOutMatch = textChunk.match(/(?:input|prompt|prompt_token_count)\s*tokens?[:=\s]+([0-9,.]+[km]?)[^\n\r]*(?:output|completion|candidates_token_count)\s*tokens?[:=\s]+([0-9,.]+[km]?)/i)
+      || textChunk.match(/([0-9,.]+[km]?)\s*(?:input|prompt|prompt_token_count)\s*tokens?[^\n\r]*?([0-9,.]+[km]?)\s*(?:output|completion|candidates_token_count)\s*tokens?/i);
     if (inOutMatch) {
-      promptTokens = parseInt(inOutMatch[1].replace(/,/g, ''), 10) || 0;
-      completionTokens = parseInt(inOutMatch[2].replace(/,/g, ''), 10) || 0;
+      promptTokens = parseTokenCount(inOutMatch[1]);
+      completionTokens = parseTokenCount(inOutMatch[2]);
       totalTokens = promptTokens + completionTokens;
       foundExplicitTokens = true;
     }
 
-    // Pattern B: "Tokens: 1,234"
+    // Pattern 2: Claude Code style: "Tokens: 1,234 (input: 1,000, output: 234)" or "Tokens: 12.5k (in: 10k, out: 2.5k)"
     if (!foundExplicitTokens) {
-      const singleMatch = textChunk.match(/(?:total\s*)?tokens?(?:\s*used)?[:=]\s*([0-9,]+)/i);
+      const claudeTokenMatch = textChunk.match(/Tokens?[:=\s]+([0-9,.]+[km]?)\s*\((?:in(?:put)?[:=\s]+([0-9,.]+[km]?),?\s*out(?:put)?[:=\s]+([0-9,.]+[km]?))\)/i);
+      if (claudeTokenMatch) {
+        totalTokens = parseTokenCount(claudeTokenMatch[1]);
+        promptTokens = parseTokenCount(claudeTokenMatch[2]);
+        completionTokens = parseTokenCount(claudeTokenMatch[3]);
+        if (totalTokens === 0 && (promptTokens > 0 || completionTokens > 0)) {
+          totalTokens = promptTokens + completionTokens;
+        }
+        foundExplicitTokens = true;
+      }
+    }
+
+    // Pattern 3: Generic single total: "Total tokens: 1,234" or "1,700 total tokens" or "Tokens used: 12.4k"
+    if (!foundExplicitTokens) {
+      const singleMatch = textChunk.match(/(?:total\s*)?tokens?(?:\s*used)?[:=\s]+([0-9,.]+[km]?)/i)
+        || textChunk.match(/([0-9,.]+[km]?)\s*total\s*tokens?/i);
       if (singleMatch) {
-        totalTokens = parseInt(singleMatch[1].replace(/,/g, ''), 10) || 0;
+        totalTokens = parseTokenCount(singleMatch[1]);
         promptTokens = Math.round(totalTokens * 0.7);
         completionTokens = totalTokens - promptTokens;
         foundExplicitTokens = true;
@@ -207,9 +242,16 @@ class UsageManager {
         });
       }
     } else {
-      // Stream output heuristic (~4 characters per token)
+      // Heuristic output estimation: ONLY if cleanChunk doesn't match raw directory listings,
+      // diff headers, shell echoes, or compiler banners
       const cleanChunk = textChunk.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim();
-      if (cleanChunk.length >= 16) {
+
+      // Skip file system listings and diffs
+      const isShellNoise = /^(?:total\s+\d+|[d-][rwx-]{9}|diff\s+--git|@@\s+-\d+,\d+\s+\+\d+,\d+\s+@@|index\s+[a-f0-9]+\.\.[a-f0-9]+)/m.test(cleanChunk);
+      const isShortLine = cleanChunk.length < 24;
+
+      if (!isShellNoise && !isShortLine) {
+        // Conservative heuristic: ~4 characters per token
         const estimatedTokens = Math.max(1, Math.round(cleanChunk.length / 4));
         this.recordSessionUsage({
           sessionId,
@@ -231,8 +273,20 @@ class UsageManager {
     const clean = inputData.trim();
     if (clean.length < 2) return;
 
+    // Guard: System shells and common shell commands never count as AI prompt tokens
+    const agentCategory = agent?.profile?.category || agent?.category;
+    const agentId = agent?.agentId || agent?.id;
+    if (agentCategory === 'shell' || agentId === 'bash') {
+      return;
+    }
+
+    const shellCmdPattern = /^(?:ls|ll|la|cat|git|cd|pwd|clear|mkdir|rm|cp|mv|touch|node|npm|pnpm|yarn|bun|npx|python|python3|pip|export|echo|which|where|grep|find|curl|wget|head|tail|less|more|vim|nano|kill|ps|top|htop|df|du|chmod|chown|tar|zip|unzip|exit|history|ssh)\b/i;
+    if (shellCmdPattern.test(clean)) {
+      return;
+    }
+
     const estimatedPromptTokens = Math.max(1, Math.round(clean.length / 4));
-    const model = this.sessionModels.get(sessionId) || this.getDefaultModel(agent?.agentId || agent?.id);
+    const model = this.sessionModels.get(sessionId) || this.getDefaultModel(agentId);
 
     this.recordSessionUsage({
       sessionId,
