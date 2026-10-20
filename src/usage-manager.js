@@ -163,7 +163,7 @@ class UsageManager {
     // Guard: System shells never consume LLM tokens
     const agentCategory = agent?.profile?.category || agent?.category;
     const agentId = agent?.agentId || agent?.id;
-    if (agentCategory === 'shell' || agentId === 'bash') {
+    if (agentCategory === 'shell' || agentId === 'bash' || agentId === 'powershell' || agentId === 'cmd' || agentId === 'pwsh') {
       return;
     }
 
@@ -246,8 +246,8 @@ class UsageManager {
       // diff headers, shell echoes, or compiler banners
       const cleanChunk = textChunk.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim();
 
-      // Skip file system listings and diffs
-      const isShellNoise = /^(?:total\s+\d+|[d-][rwx-]{9}|diff\s+--git|@@\s+-\d+,\d+\s+\+\d+,\d+\s+@@|index\s+[a-f0-9]+\.\.[a-f0-9]+)/m.test(cleanChunk);
+      // Skip file system listings, diffs, and shell prompts (Linux and Windows)
+      const isShellNoise = /^(?:total\s+\d+|[d-][rwx-]{9}|diff\s+--git|@@\s+-\d+,\d+\s+\+\d+,\d+\s+@@|index\s+[a-f0-9]+\.\.[a-f0-9]+|Volume in drive|Directory of |PS [A-Z]:\\|[A-Z]:\\[^>]*>)/im.test(cleanChunk);
       const isShortLine = cleanChunk.length < 24;
 
       if (!isShellNoise && !isShortLine) {
@@ -276,11 +276,11 @@ class UsageManager {
     // Guard: System shells and common shell commands never count as AI prompt tokens
     const agentCategory = agent?.profile?.category || agent?.category;
     const agentId = agent?.agentId || agent?.id;
-    if (agentCategory === 'shell' || agentId === 'bash') {
+    if (agentCategory === 'shell' || agentId === 'bash' || agentId === 'powershell' || agentId === 'cmd' || agentId === 'pwsh') {
       return;
     }
 
-    const shellCmdPattern = /^(?:ls|ll|la|cat|git|cd|pwd|clear|mkdir|rm|cp|mv|touch|node|npm|pnpm|yarn|bun|npx|python|python3|pip|export|echo|which|where|grep|find|curl|wget|head|tail|less|more|vim|nano|kill|ps|top|htop|df|du|chmod|chown|tar|zip|unzip|exit|history|ssh)\b/i;
+    const shellCmdPattern = /^(?:ls|ll|la|cat|git|cd|pwd|clear|cls|dir|type|copy|move|del|rm|mkdir|md|rd|touch|node|npm|pnpm|yarn|bun|npx|python|python3|pip|export|set|echo|which|where|grep|find|findstr|curl|wget|head|tail|less|more|vim|nano|kill|taskkill|tasklist|ps|top|htop|df|du|chmod|chown|tar|zip|unzip|exit|history|ssh|ipconfig|ifconfig|ping|netstat|powershell|pwsh|cmd|winget|choco|scoop)\b/i;
     if (shellCmdPattern.test(clean)) {
       return;
     }

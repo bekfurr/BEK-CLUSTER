@@ -218,7 +218,9 @@ bek-cluster --no-open
 | **GitHub Copilot** | `copilot` | GitHub Copilot CLI |
 | **Crush CLI** | `crush` | Terminal code assistant |
 | **Pi CLI** | `pi` | Personal AI assistant |
-| **Bash Terminal** | `bash` | Standard system shell session |
+| **Bash Terminal** | `bash` | Standard Linux/macOS/Git Bash shell session |
+| **PowerShell** | `powershell` / `pwsh` | Windows PowerShell / PowerShell Core session |
+| **Command Prompt** | `cmd` | Windows Command Prompt (`cmd.exe`) session |
 | **Custom Binary** | *custom* | Any command, interpreter, or flags |
 
 ---

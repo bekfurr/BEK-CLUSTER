@@ -1,7 +1,7 @@
 const pty = require('node-pty');
 const path = require('path');
 const fs = require('fs');
-const { getAgentProfile } = require('./agents');
+const { getAgentProfile, getDefaultShellAgentId } = require('./agents');
 const usageManager = require('./usage-manager');
 
 class TerminalManager {
@@ -28,7 +28,7 @@ class TerminalManager {
    */
   createSession(options = {}) {
     const {
-      agentId = 'bash',
+      agentId = getDefaultShellAgentId(),
       customCommand = null,
       customArgs = [],
       cwd = this.defaultCwd,

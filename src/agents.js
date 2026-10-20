@@ -102,8 +102,30 @@ const AGENT_PROFILES = [
     color: '#94A3B8',
     gradient: 'linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(71, 85, 105, 0.1))',
     category: 'shell',
-    description: 'Interactive system shell terminal',
+    description: 'Interactive system shell terminal (Linux/macOS/Git Bash)',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>`
+  },
+  {
+    id: 'powershell',
+    name: 'PowerShell',
+    binary: process.platform === 'win32' ? 'powershell.exe' : 'pwsh',
+    defaultArgs: process.platform === 'win32' ? ['-NoLogo'] : [],
+    color: '#0078D4',
+    gradient: 'linear-gradient(135deg, rgba(0, 120, 212, 0.2), rgba(37, 99, 235, 0.1))',
+    category: 'shell',
+    description: 'Windows PowerShell / PowerShell Core terminal session',
+    icon: `<svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><title>PowerShell</title><path d="M21.162 2.656a2.868 2.868 0 00-2.316-.656H5.154A2.867 2.867 0 002.3 4.846L.046 19.154A2.867 2.867 0 002.89 22h15.956a2.868 2.868 0 002.846-2.433l2.258-14.308a2.867 2.867 0 00-.788-2.603zM5.316 7.618l5.297 3.53-5.297 3.532-.977-1.464 3.1-2.068-3.1-2.066.977-1.464zm10.368 8.764H8.842v-1.752h6.842v1.752z" fill="#0078D4"/></svg>`
+  },
+  {
+    id: 'cmd',
+    name: 'Command Prompt',
+    binary: 'cmd.exe',
+    defaultArgs: [],
+    color: '#38BDF8',
+    gradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(30, 41, 59, 0.1))',
+    category: 'shell',
+    description: 'Windows Command Prompt (cmd.exe) session',
+    icon: `<svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><title>Command Prompt</title><rect width="22" height="18" x="1" y="3" rx="3" fill="#0F172A" stroke="#475569" stroke-width="1.5"/><path d="M5 8l4 3.5L5 15" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="18" y2="15" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round"/></svg>`
   }
 ];
 
@@ -113,6 +135,27 @@ const AGENT_PROFILES = [
 function findExecutable(binaryName) {
   try {
     const isWindows = process.platform === 'win32';
+    if (isWindows) {
+      if (binaryName === 'cmd' || binaryName === 'cmd.exe') {
+        const comspec = process.env.COMSPEC || path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'cmd.exe');
+        if (fs.existsSync(comspec)) return comspec;
+      }
+      if (binaryName === 'powershell' || binaryName === 'powershell.exe') {
+        const sysRoot = process.env.SystemRoot || 'C:\\Windows';
+        const psPath = path.join(sysRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+        if (fs.existsSync(psPath)) return psPath;
+      }
+      if (binaryName === 'pwsh' || binaryName === 'pwsh.exe') {
+        const pwshPaths = [
+          path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'PowerShell', '7', 'pwsh.exe'),
+          path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'PowerShell', '7', 'pwsh.exe')
+        ];
+        for (const p of pwshPaths) {
+          if (fs.existsSync(p)) return p;
+        }
+      }
+    }
+
     const checkCmd = isWindows ? `where ${binaryName}` : `which ${binaryName}`;
     const output = execSync(checkCmd, {
       stdio: ['pipe', 'pipe', 'ignore'],
@@ -120,7 +163,7 @@ function findExecutable(binaryName) {
       env: process.env
     }).trim();
     if (output) {
-      return output.split('\n')[0].trim();
+      return output.split(/\r?\n/)[0].trim();
     }
   } catch (err) {
     // Check common mise/user paths if not in standard which
@@ -145,6 +188,19 @@ function findExecutable(binaryName) {
 }
 
 /**
+ * Determine default shell agent based on OS platform.
+ */
+function getDefaultShellAgentId() {
+  if (process.platform === 'win32') {
+    if (findExecutable('powershell.exe') || findExecutable('powershell') || findExecutable('pwsh')) {
+      return 'powershell';
+    }
+    return 'cmd';
+  }
+  return 'bash';
+}
+
+/**
  * Scan system and return all agent profiles with their installation status.
  */
 function detectAgents() {
@@ -166,6 +222,14 @@ function getAgentProfile(agentIdOrCommand) {
   let targetId = agentIdOrCommand;
   if (targetId === 'gemini' || targetId === 'antigravity') {
     targetId = 'agy';
+  }
+
+  // Windows fallback: if bash was requested but is not installed, route to native PowerShell or cmd
+  if (process.platform === 'win32' && targetId === 'bash') {
+    const hasBash = !!findExecutable('bash');
+    if (!hasBash) {
+      targetId = getDefaultShellAgentId();
+    }
   }
 
   const profile = AGENT_PROFILES.find(p => p.id === targetId || p.binary === targetId);
@@ -199,5 +263,6 @@ module.exports = {
   AGENT_PROFILES,
   detectAgents,
   getAgentProfile,
+  getDefaultShellAgentId,
   findExecutable
 };

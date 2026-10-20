@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const os = require('os');
-const { detectAgents, getAgentProfile } = require('./agents');
+const { detectAgents, getAgentProfile, getDefaultShellAgentId } = require('./agents');
 const TerminalManager = require('./terminal-manager');
 const { setupWebSocketServer } = require('./websocket');
 const usageManager = require('./usage-manager');
@@ -65,7 +65,7 @@ function createServer(options = {}) {
   app.post('/api/sessions', (req, res) => {
     try {
       const {
-        agentId = 'bash',
+        agentId = getDefaultShellAgentId(),
         customCommand = null,
         customArgs = [],
         cwd = terminalManager.getDefaultCwd(),
