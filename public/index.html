@@ -10,12 +10,12 @@
 </head>
 <body class="theme-dark">
   <div id="app" class="app-container">
-    <!-- Top Navigation Bar -->
-    <header class="top-nav">
-      <div class="nav-left">
-        <!-- Minimal Brand Monogram -->
+    <!-- Left Navigation Sidebar -->
+    <aside class="app-sidebar" id="appSidebar">
+      <!-- Sidebar Top Header: Brand & Collapse Toggle -->
+      <div class="sidebar-header">
         <div class="brand">
-          <div class="brand-logo" aria-hidden="true">
+          <div class="brand-logo" aria-hidden="true" title="BEK CLUSTER">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="4"/>
               <path d="M8 8h8M8 12h5M8 16h8"/>
@@ -23,100 +23,40 @@
           </div>
           <div class="brand-text">
             <span class="brand-name">BEK<span class="brand-accent">CLUSTER</span></span>
+            <span class="brand-version">v1.1.0</span>
           </div>
         </div>
 
-        <div class="nav-divider" aria-hidden="true"></div>
-
-        <!-- Current Workspace Directory Pill -->
-        <div class="workspace-pill" id="workspaceDisplay" title="Current Workspace Directory">
-          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 8 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+        <button class="sidebar-toggle-btn" id="btnToggleSidebar" title="Kichraytirish (⌘B)" aria-label="Toggle sidebar" data-tooltip="Kichraytirish / Kengaytirish (⌘B)">
+          <svg class="toggle-icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="m16 15-3-3 3-3"/>
           </svg>
-          <span class="pill-text" id="cwdPath">Loading workspace...</span>
-        </div>
-
-        <!-- Active Sessions Status -->
-        <div class="status-indicator" id="clusterStatusPill">
-          <span class="status-dot"></span>
-          <span id="activeSessionsCount">0 Active</span>
-        </div>
+          <svg class="toggle-icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="m14 9 3 3-3 3"/>
+          </svg>
+        </button>
       </div>
 
-      <div class="nav-center">
-        <!-- macOS Segmented Control Layout Switcher -->
-        <nav class="segmented-control" role="group" aria-label="Layout mode">
-          <button class="seg-btn layout-btn active" data-layout="vertical" title="Vertical Layout (3 visible, scroll/wheel/arrow keys)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="5" rx="1.5"/>
-              <rect x="3" y="9.5" width="18" height="5" rx="1.5"/>
-              <rect x="3" y="16" width="18" height="5" rx="1.5"/>
-            </svg>
-            <span class="seg-label">Vertikal</span>
-          </button>
-          <button class="seg-btn layout-btn" data-layout="horizontal" title="Horizontal Layout (3 visible, scroll/wheel/arrow keys)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="5" height="18" rx="1.5"/>
-              <rect x="9.5" y="3" width="5" height="18" rx="1.5"/>
-              <rect x="16" y="3" width="5" height="18" rx="1.5"/>
-            </svg>
-            <span class="seg-label">Gorizontal</span>
-          </button>
-          <button class="seg-btn layout-btn" data-layout="desktop" title="Virtual Desktop (Freeform drag, resize & float)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="12" height="10" rx="1.5"/>
-              <rect x="9" y="11" width="12" height="10" rx="1.5"/>
-            </svg>
-            <span class="seg-label">Desktop</span>
-          </button>
-          <button class="seg-btn layout-btn" data-layout="tabs" title="Tabbed Fullscreen Mode">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="16" rx="2"/>
-              <path d="M3 9h18M9 4v5"/>
-            </svg>
-            <span class="seg-label">Tabs</span>
-          </button>
-        </nav>
-      </div>
-
-      <div class="nav-right">
-        <!-- Usage Analytics Button -->
-        <button id="btnUsageModal" class="btn btn-ghost usage-toggle" title="Model & Token Usage Analytics">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 20V10M18 20V4M6 20v-4"/>
-          </svg>
-          <span>Usage</span>
-          <span class="badge badge-usage" id="navTotalTokensBadge">0 tkn</span>
-        </button>
-
-        <!-- Broadcast Toggle Button -->
-        <button id="toggleBroadcastBtn" class="btn btn-ghost broadcast-toggle" title="Toggle Broadcast Prompt Bar (⌘K)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
-            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
-            <circle cx="12" cy="12" r="2"/>
-            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
-            <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
-          </svg>
-          <span>Broadcast</span>
-          <kbd class="kbd-shortcut">⌘K</kbd>
-        </button>
-
-        <div class="nav-divider" aria-hidden="true"></div>
-
-        <!-- Launch Dropdown / Menu Popover -->
-        <div class="dropdown" id="launchDropdown">
-          <button class="btn btn-accent-outline" id="launchDropdownBtn" aria-haspopup="true" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span>Launch Agent</span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Primary Action: Launch Agent Button with Dropdown Flyout -->
+      <div class="sidebar-action-wrap">
+        <div class="dropdown sidebar-dropdown" id="launchDropdown">
+          <button class="sidebar-primary-btn" id="launchDropdownBtn" aria-haspopup="true" aria-expanded="false" data-tooltip="Launch Agent">
+            <div class="sidebar-btn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <span class="sidebar-btn-label">Launch Agent</span>
+            <svg class="chevron sidebar-btn-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="m6 9 6 6 6-6"/>
             </svg>
           </button>
-          <div class="dropdown-menu dropdown-right" id="agentQuickMenu" role="menu">
+          <div class="dropdown-menu sidebar-flyout-menu" id="agentQuickMenu" role="menu">
             <div class="dropdown-header">DETECTED AGENTS</div>
             <div id="quickAgentList" class="dropdown-items">
               <!-- Dynamically populated -->
@@ -131,38 +71,163 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Global Actions -->
-        <button id="btnKillAll" class="btn btn-icon btn-ghost btn-danger-hover" title="Stop All Agents">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/>
-            <rect x="9" y="9" width="6" height="6" rx="1"/>
-          </svg>
+      <!-- Scrollable Navigation Groups -->
+      <div class="sidebar-scrollable">
+        <!-- Layout Modes -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">KO'RINISHLAR (LAYOUT)</div>
+          <div class="sidebar-nav-list" role="group" aria-label="Layout mode">
+            <button class="sidebar-nav-item layout-btn active" data-layout="vertical" data-tooltip="Vertikal (3 visible, scroll)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="5" rx="1.5"/>
+                  <rect x="3" y="9.5" width="18" height="5" rx="1.5"/>
+                  <rect x="3" y="16" width="18" height="5" rx="1.5"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Vertikal</span>
+            </button>
+
+            <button class="sidebar-nav-item layout-btn" data-layout="horizontal" data-tooltip="Gorizontal (3 visible, scroll)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="5" height="18" rx="1.5"/>
+                  <rect x="9.5" y="3" width="5" height="18" rx="1.5"/>
+                  <rect x="16" y="3" width="5" height="18" rx="1.5"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Gorizontal</span>
+            </button>
+
+            <button class="sidebar-nav-item layout-btn" data-layout="desktop" data-tooltip="Desktop (Freeform drag & resize)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="12" height="10" rx="1.5"/>
+                  <rect x="9" y="11" width="12" height="10" rx="1.5"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Desktop</span>
+            </button>
+
+            <button class="sidebar-nav-item layout-btn" data-layout="tabs" data-tooltip="Tabs (Tabbed Fullscreen)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/>
+                  <path d="M3 9h18M9 4v5"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Tabs</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tools & Prompting Section -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">ASBOBLAR (TOOLS)</div>
+          <div class="sidebar-nav-list">
+            <!-- Usage Analytics Button -->
+            <button id="btnUsageModal" class="sidebar-nav-item usage-toggle" data-tooltip="Usage Analytics (Tokenlar)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20V10M18 20V4M6 20v-4"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Usage Analytics</span>
+              <span class="badge badge-usage sidebar-badge" id="navTotalTokensBadge">0 tkn</span>
+            </button>
+
+            <!-- Broadcast Toggle Button -->
+            <button id="toggleBroadcastBtn" class="sidebar-nav-item broadcast-toggle" data-tooltip="Broadcast Prompt (⌘K)">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
+                  <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+                  <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Broadcast</span>
+              <kbd class="kbd-shortcut sidebar-kbd">⌘K</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cluster Status & Workspace Section -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">KLASTER (STATUS)</div>
+          <!-- Workspace Directory Pill -->
+          <div class="sidebar-workspace-pill" id="workspaceDisplay" data-tooltip="Current Workspace Directory">
+            <div class="sidebar-nav-icon">
+              <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 8 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+              </svg>
+            </div>
+            <span class="pill-text sidebar-pill-text" id="cwdPath">Loading workspace...</span>
+          </div>
+
+          <!-- Active Sessions Status Indicator -->
+          <div class="sidebar-status-item" id="clusterStatusPill" data-tooltip="Faol sessiyalar">
+            <span class="status-dot"></span>
+            <span id="activeSessionsCount" class="sidebar-status-text">0 Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer Actions -->
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-actions">
+          <button id="btnKillAll" class="sidebar-footer-btn btn-danger-hover" data-tooltip="Stop All Agents" title="Stop All Agents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+            <span class="sidebar-footer-label">Stop All</span>
+          </button>
+
+          <button id="btnFullscreen" class="sidebar-footer-btn" data-tooltip="Toggle Fullscreen" title="Toggle Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+            <span class="sidebar-footer-label">Fullscreen</span>
+          </button>
+        </div>
+
+        <button class="sidebar-collapse-row-btn" id="btnToggleSidebarBottom" data-tooltip="Kichraytirish (⌘B)" title="Kichraytirish (⌘B)">
+          <div class="sidebar-nav-icon">
+            <svg class="collapse-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m11 17-5-5 5-5"/>
+              <path d="m18 17-5-5 5-5"/>
+            </svg>
+            <svg class="expand-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m13 17 5-5-5-5"/>
+              <path d="m6 17 5-5-5-5"/>
+            </svg>
+          </div>
+          <span class="sidebar-collapse-label">Kichraytirish</span>
         </button>
+      </div>
+    </aside>
 
-        <button id="btnFullscreen" class="btn btn-icon btn-ghost" title="Toggle Fullscreen">
+    <!-- Main Workspace Area -->
+    <div class="main-content-wrapper" id="mainContentWrapper">
+      <!-- Tabs Strip (Visible only in Tabs mode) -->
+      <div id="tabsStrip" class="tabs-strip" style="display: none;">
+        <div class="tabs-scroll-area" id="tabsList">
+          <!-- Dynamically rendered tabs -->
+        </div>
+        <button class="btn btn-icon btn-sm btn-ghost" id="tabAddAgentBtn" title="Launch New Agent">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
         </button>
       </div>
-    </header>
 
-    <!-- Tabs Strip (Visible only in Tabs mode) -->
-    <div id="tabsStrip" class="tabs-strip" style="display: none;">
-      <div class="tabs-scroll-area" id="tabsList">
-        <!-- Dynamically rendered tabs -->
-      </div>
-      <button class="btn btn-icon btn-sm btn-ghost" id="tabAddAgentBtn" title="Launch New Agent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Main Workspace Container -->
-    <main id="workspaceContainer" class="workspace-grid layout-vertical">
+      <!-- Main Workspace Container -->
+      <main id="workspaceContainer" class="workspace-grid layout-vertical">
       <!-- Empty State (Shown when 0 sessions) -->
       <div id="emptyState" class="empty-state">
         <div class="empty-state-card">
@@ -243,9 +308,11 @@
     </div>
 
     <!-- Minimized Agents Dock (macOS Style Dock) -->
-    <div id="minimizedDock" class="minimized-dock" aria-label="Minimized Agents Dock">
-      <!-- Minimized agent tiles dynamically inserted here -->
-    </div>
+    <div id="minimizedDock" class="minimized-dock" aria-label="Minimized Agents Dock"></div>
+  </div><!-- /main-content-wrapper -->
+
+  <!-- Floating Tooltip for Collapsed Sidebar Elements -->
+  <div id="sidebarTooltip" class="sidebar-floating-tooltip" role="tooltip" aria-hidden="true"></div>
 
     <!-- Custom Agent Modal / Sheet -->
     <div id="customAgentModal" class="modal-overlay" style="display: none;">

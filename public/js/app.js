@@ -22,6 +22,11 @@
 
   // DOM Elements
   const elements = {
+    appContainer: document.getElementById('app'),
+    appSidebar: document.getElementById('appSidebar'),
+    btnToggleSidebar: document.getElementById('btnToggleSidebar'),
+    btnToggleSidebarBottom: document.getElementById('btnToggleSidebarBottom'),
+    sidebarTooltip: document.getElementById('sidebarTooltip'),
     workspaceDisplay: document.getElementById('workspaceDisplay'),
     cwdPath: document.getElementById('cwdPath'),
     clusterStatusPill: document.getElementById('clusterStatusPill'),
@@ -88,10 +93,12 @@
    * Initialize App
    */
   async function init() {
+    loadSidebarState();
     loadCustomAgents();
     setupEventListeners();
     setupKeyboardShortcuts();
     setupContainerScrollHandling();
+    setupSidebarTooltips();
     await loadInfo();
     await loadAgents();
     await loadExistingSessions();
@@ -99,6 +106,118 @@
     setInterval(() => loadUsageSummary(), 10000);
     setLayout(state.activeLayout);
     updateUIState();
+  }
+
+  /**
+   * Load Saved Sidebar State from localStorage or URL query
+   */
+  function loadSidebarState() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      let isCollapsed = false;
+      if (urlParams.has('collapsed')) {
+        isCollapsed = urlParams.get('collapsed') === 'true' || urlParams.get('collapsed') === '1';
+      } else {
+        isCollapsed = localStorage.getItem('bek_cluster_sidebar_collapsed') === 'true';
+      }
+      if (elements.appContainer) {
+        elements.appContainer.classList.toggle('sidebar-collapsed', isCollapsed);
+      }
+      updateSidebarToggleButtons(isCollapsed);
+    } catch (e) {
+      console.warn('Could not read sidebar state', e);
+    }
+  }
+
+  /**
+   * Toggle Sidebar Expanded / Collapsed State
+   */
+  function toggleSidebar(forceState = null) {
+    if (!elements.appContainer) return;
+    const currentlyCollapsed = elements.appContainer.classList.contains('sidebar-collapsed');
+    const nextState = forceState !== null ? forceState : !currentlyCollapsed;
+
+    elements.appContainer.classList.toggle('sidebar-collapsed', nextState);
+    try {
+      localStorage.setItem('bek_cluster_sidebar_collapsed', nextState ? 'true' : 'false');
+    } catch (e) {}
+
+    updateSidebarToggleButtons(nextState);
+    hideSidebarTooltip();
+
+    // Refit layout immediately and right after CSS transition completes
+    clampDesktopBounds();
+    refitAll();
+    setTimeout(() => {
+      clampDesktopBounds();
+      refitAll();
+    }, 260);
+  }
+
+  /**
+   * Update Sidebar Toggle Buttons Titles & ARIA
+   */
+  function updateSidebarToggleButtons(isCollapsed) {
+    const titleText = isCollapsed ? "Kengaytirish (⌘B)" : "Kichraytirish (⌘B)";
+    if (elements.btnToggleSidebar) {
+      elements.btnToggleSidebar.setAttribute('title', titleText);
+      elements.btnToggleSidebar.setAttribute('data-tooltip', titleText);
+      elements.btnToggleSidebar.setAttribute('aria-expanded', String(!isCollapsed));
+    }
+    if (elements.btnToggleSidebarBottom) {
+      elements.btnToggleSidebarBottom.setAttribute('title', titleText);
+      elements.btnToggleSidebarBottom.setAttribute('data-tooltip', titleText);
+      const label = elements.btnToggleSidebarBottom.querySelector('.sidebar-collapse-label');
+      if (label) {
+        label.textContent = isCollapsed ? 'Kengaytirish' : 'Kichraytirish';
+      }
+    }
+  }
+
+  /**
+   * Floating Tooltip Handler for Collapsed Sidebar
+   */
+  function setupSidebarTooltips() {
+    if (!elements.appSidebar || !elements.sidebarTooltip) return;
+
+    elements.appSidebar.addEventListener('mouseover', (e) => {
+      if (!elements.appContainer || !elements.appContainer.classList.contains('sidebar-collapsed')) {
+        hideSidebarTooltip();
+        return;
+      }
+
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || !elements.appSidebar.contains(target)) {
+        hideSidebarTooltip();
+        return;
+      }
+
+      const text = target.getAttribute('data-tooltip');
+      if (!text) {
+        hideSidebarTooltip();
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      elements.sidebarTooltip.textContent = text;
+      elements.sidebarTooltip.style.left = `${Math.round(rect.right + 10)}px`;
+      elements.sidebarTooltip.style.top = `${Math.round(rect.top + rect.height / 2)}px`;
+      elements.sidebarTooltip.classList.add('visible');
+    });
+
+    elements.appSidebar.addEventListener('mouseleave', () => {
+      hideSidebarTooltip();
+    });
+
+    elements.appSidebar.addEventListener('click', () => {
+      hideSidebarTooltip();
+    });
+  }
+
+  function hideSidebarTooltip() {
+    if (elements.sidebarTooltip) {
+      elements.sidebarTooltip.classList.remove('visible');
+    }
   }
 
   /**
@@ -500,7 +619,7 @@
     const item = state.sessions.get(sessionId);
     if (!item) return;
     state.topZIndex += 1;
-    // Cap at 850 so windows never occlude top-nav (1000) or launch menu (1100)
+    // Cap at 850 so windows never occlude sidebar (1000) or launch menu (1200)
     if (state.topZIndex > 850) {
       state.topZIndex = 11;
       for (const [id, s] of state.sessions.entries()) {
@@ -1718,6 +1837,7 @@
   /**
    * Setup Keyboard Shortcuts:
    * - Cmd/Ctrl + K: Toggle & focus broadcast bar
+   * - Cmd/Ctrl + B: Toggle sidebar collapse/expand
    * - Cmd/Ctrl + 1..6: Switch/Focus pane 1 through 6
    * - Arrow Keys: Navigate windows in vertical/horizontal layout (when container or card focused)
    * - Escape: Close modal / dropdown
@@ -1732,6 +1852,13 @@
         toggleBroadcast(true);
         elements.broadcastInput.focus();
         elements.broadcastInput.select();
+        return;
+      }
+
+      // Cmd/Ctrl + B: Toggle Sidebar Collapse
+      if (isCmdOrCtrl && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        toggleSidebar();
         return;
       }
 
@@ -1816,6 +1943,24 @@
    * Setup Event Listeners
    */
   function setupEventListeners() {
+    // Sidebar Collapse / Expand Toggle Buttons
+    if (elements.btnToggleSidebar) {
+      elements.btnToggleSidebar.addEventListener('click', () => toggleSidebar());
+    }
+    if (elements.btnToggleSidebarBottom) {
+      elements.btnToggleSidebarBottom.addEventListener('click', () => toggleSidebar());
+    }
+
+    // Refit terminals after sidebar animation transition completes
+    if (elements.appSidebar) {
+      elements.appSidebar.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'width') {
+          clampDesktopBounds();
+          refitAll();
+        }
+      });
+    }
+
     // Launch Dropdown Toggle
     elements.launchDropdownBtn.addEventListener('click', (e) => {
       e.stopPropagation();
