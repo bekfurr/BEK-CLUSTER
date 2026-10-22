@@ -4,7 +4,7 @@
   "description": "BEKFURR AGENT CLUSTER - Run multiple AI agents (Claude Code, Codex, Antigravity CLI (agy), OpenCode, etc.) concurrently in one web interface",
   "main": "src/server.js",
   "bin": {
-    "bek-cluster": "./bin/bek-cluster.js"
+    "bek-cluster": "bin/bek-cluster.js"
   },
   "scripts": {
     "start": "node ./bin/bek-cluster.js",
