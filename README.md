@@ -1,169 +1,158 @@
 # BEKFURR AGENT CLUSTER (`bek-cluster`)
 
-> Multi-Agent AI Terminal Orchestrator & Virtual Workspace  
-> Run and orchestrate multiple CLI AI agents (Claude Code, Antigravity CLI, OpenAI Codex, OpenCode, Copilot, etc.) simultaneously in an Apple visionOS / macOS inspired web environment.
+> Hierarchical Multi-Agent AI Terminal Orchestrator & Virtual Workspace  
+> Orchestrate multiple AI coding agents (Claude Code, Antigravity CLI, OpenAI Codex, OpenCode, Copilot, Aider, etc.) concurrently in an Apple visionOS & macOS inspired interface.
 
 ---
 
-![Version](https://img.shields.io/badge/BEK--CLUSTER-v1.0.0-E5383B?style=flat-square&logo=terminal)
-![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js)
+![Version](https://img.shields.io/badge/BEK--CLUSTER-v1.1.0-E5383B?style=flat-square&logo=terminal)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)
+![npm](https://img.shields.io/badge/npm-bek--cluster-CB3837?style=flat-square&logo=npm)
 ![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)
 
 ---
 
-## Overview
+## ⚡ Quick Start via NPM (No Git Clone Required)
 
-**BEKFURR AGENT CLUSTER** is a minimalist, local developer workspace designed for running, comparing, and broadcasting commands across multiple AI coding agents side-by-side.
+Install directly from npm registry to use `bek-cluster` in any project:
 
-Instead of managing cluttered tmux panes or detached terminal windows, `bek-cluster` unifies your command-line workflow inside a dark, hardware-accelerated web terminal interface.
+```bash
+# Install globally
+npm install -g bek-cluster
 
-### Highlights
+# Launch in your repository or project folder
+cd /path/to/your/project
+bek-cluster
+```
 
-- **Auto-Detection**: Scans your system environment and provides one-click launching for detected tools (`claude`, `agy`, `codex`, `opencode`, `copilot`, `crush`, `pi`, `bash`, or custom binaries).
-- **Simultaneous Multi-Agent Execution**: Run multiple independent agent sessions in parallel on the same project repository.
-- **Working Directory Switcher & Safety Restart**: View each agent's active folder path directly in the pane header. Click to re-target the agent to a different directory with instant process re-spawning and safety confirmation.
-- **Token & Model Usage Analytics**: Real-time stream sniffing for token consumption (prompt, completion, total) and AI model tracking with visionOS-styled breakdown KPIs, progress bars, and historical logs.
-- **Spotlight Broadcast Bar**: Floating capsule (`Cmd/Ctrl + K`) allowing you to transmit a prompt to all active agents simultaneously for benchmark comparison or collaborative work.
+Your default browser will immediately open `http://127.0.0.1:3888` connected to your workspace.
+
+---
+
+## What's New in Version 1.1.0
+
+### 👑 PRO AGENT Mode (Hierarchical Lead / Worker Orchestrator)
+Transform individual AI tools into a coordinated autonomous team:
+- **Project Setup Wizard**: Create dedicated project workspaces with isolated directories and configuration.
+- **OTA (Director / Lead) Agent**: Assign an authoritative supervisor (e.g. Claude Code, Antigravity CLI, Codex CLI) to lead your project.
+- **Automated Director Directive (`.bek-cluster/DIRECTOR_DIRECTIVE.md`)**: Automatically injected upon launch, equipping the Lead Agent with full architectural authority and a live inventory of all installed worker models.
+- **Intelligent Token Economy Policy**: The Director agent synthesizes incoming user goals, decomposes them into modular milestones, and assigns routine tasks to lightweight/balanced sub-agents while reserving high-intelligence models for core architectural logic.
+- **Worker Sub-Agents Klaster**: Launch specialized sub-agents (Frontend Developer, Backend API, Unit Tester, DevOps) executing in parallel within the shared workspace.
+- **Human-in-the-Loop Intervention Bar**: Monitor execution and intervene at any moment. Instruct the Director agent to redirect or course-correct any sub-agent that makes a mistake or deviates from instructions.
+
+### 🛠️ Agent Detection & Installer Hub
+- **Strict Host Detection**: Displays only genuinely installed CLI agents on your machine to eliminate interface confusion.
+- **AI Agent Onboarding Banner**: Prompts users when zero AI agents are detected and provides a direct path to installation.
+- **Dual Installation Methods**:
+  - **⚡ Automatic**: Spawns an interactive live PTY terminal session to execute package manager commands (`npm install -g ...`, `pip install ...`) in real-time.
+  - **📖 Step-by-Step Manual Guide**: Clear sequential steps with one-click **Copy-to-Clipboard** commands, prerequisites, and authentication instructions.
+
+### 🧭 Collapsible Sleek Sidebar Navigation
+- Apple visionOS inspired glassmorphic sidebar grouping modes, layouts, and tools.
+- Quick collapse/expand toggle button or **`Cmd/Ctrl + B`** keyboard shortcut with animated width transition and automated terminal refit.
+- Floating tooltips in collapsed icon mode.
+
+---
+
+## Core Features
+
+- **Multi-Agent Side-by-Side Execution**: Run multiple independent agent sessions in parallel on the same project repository.
 - **Dynamic Layout Engine**:
   - **Vertikal**: Displays up to 3 agents vertically with smooth wheel / arrow navigation.
   - **Gorizontal**: Displays up to 3 agents side-by-side with mouse wheel horizontal translation.
   - **Virtual Desktop**: Drag, float, and pinch-resize terminal windows in freeform 2D space.
   - **Tabs**: Fullscreen single-agent tab switching.
-- **Background Execution & Minimize to Dock**: Collapse any active pane into a compact status icon with the `-` control. Background PTY processes continue executing without interruption.
+- **Spotlight Broadcast Bar**: Floating capsule (`Cmd/Ctrl + K`) allowing you to transmit prompts to all or selected agents simultaneously for benchmark comparison or collaborative work.
+- **Working Directory Switcher & Safety Restart**: Re-target any agent to a different directory directly from the pane header.
+- **Token & Model Usage Analytics**: Real-time stream sniffing for token consumption (prompt, completion, total) and AI model tracking with visionOS-styled breakdown KPIs, progress bars, and historical logs.
 - **4-Color Real-Time Status Engine**:
-  - Yellow: Thinking / processing stream
-  - Green: Done / ready / idle
-  - Red: Error / non-zero exit
-  - Blue: Waiting for user confirmation or interactive input
+  - 🟡 Yellow: Thinking / processing stream
+  - 🟢 Green: Done / ready / idle
+  - 🔴 Red: Error / non-zero exit
+  - 🔵 Blue: Waiting for user confirmation or interactive input
 - **xterm.js + node-pty**: TrueColor, desaturated ANSI palette, cursor blink, resize handling, mouse interactions, and hyperlink support.
 
 ---
 
-## Interface Previews
+## Supported Agents & Classification
 
-Place your workspace screenshots in `docs/screenshots/`:
-
-| Overview (Desktop Mode) | Spotlight Broadcast & Dynamic Flow |
-| :---: | :---: |
-| ![Desktop Layout](docs/screenshots/overview.png) | ![Broadcast View](docs/screenshots/broadcast.png) |
+| Agent | Executable | Tier | Token Tier | Primary Specialty |
+|---|---|---|---|---|
+| **Claude Code** | `claude` | `lead` | `high-power` | System architecture, complex orchestration, full system design |
+| **Antigravity CLI** | `agy` | `lead` | `high-power` | Deep reasoning, autonomous workflows, full-stack development |
+| **Codex CLI** | `codex` | `lead` | `high-power` | Backend modules, API endpoints, code refactoring |
+| **OpenCode** | `opencode` | `worker` | `balanced` | UI components, fast feature generation, unit tests |
+| **GitHub Copilot** | `copilot` | `worker` | `balanced` | CLI commands, GitHub workflows, scripts |
+| **Aider AI** | `aider` | `worker` | `balanced` | Git pair programming, automated commit integration |
+| **Cursor Agent** | `cursor` | `worker` | `balanced` | Fast file edits, structural code changes |
+| **DeepSeek CLI** | `deepseek` | `worker` | `balanced` | Algorithmic logic, data analysis, microservices |
+| **Crush CLI** | `crush` | `worker` | `balanced` | Fast terminal coding assistant |
+| **Pi CLI** | `pi` | `worker` | `balanced` | Personal AI assistant |
+| **Bash Shell** | `bash` | `shell` | `zero-token` | Native system commands, build scripts, git operations |
+| **PowerShell** | `powershell` / `pwsh` | `shell` | `zero-token` | Windows PowerShell system automation |
+| **Command Prompt**| `cmd` | `shell` | `zero-token` | Windows Command Prompt (`cmd.exe`) |
+| **Custom Binary** | *custom* | `custom` | *custom* | Any executable, script, or CLI utility |
 
 ---
 
 ## Installation & Setup
 
-`bek-cluster` utilizes high-performance native pseudo-terminal bindings (`node-pty`) for responsive, low-latency streaming between web browsers and AI CLI processes. 
+### Option 1: Direct NPM Install (Recommended)
 
-Thanks to our built-in `.npmrc` configuration and self-healing `scripts/ensure-pty.js`, installation runs out-of-the-box on Linux, macOS, and Windows.
+```bash
+npm install -g bek-cluster
+bek-cluster
+```
+
+### Option 2: Clone from GitHub Source
+
+```bash
+# 1. Clone repository
+git clone https://github.com/bekfurr/BEK-CLUSTER.git
+cd BEK-CLUSTER
+
+# 2. Install dependencies (auto-builds native node-pty)
+npm install
+
+# 3. Link globally
+npm link
+
+# 4. Launch in any directory
+bek-cluster
+```
 
 ---
 
-### Prerequisites by Platform
+## Platform Prerequisites for Native PTY
 
-Ensure **Node.js (v18.0.0 or higher)** and a standard C++ compiler toolchain are present on your machine:
+Ensure **Node.js (v18.0.0 or higher)** and standard build tools are present:
 
-#### 🐧 Linux (Ubuntu, Debian, Fedora, Arch)
+### 🐧 Linux (Ubuntu, Debian, Fedora, Arch)
 ```bash
-# Ubuntu / Debian / Pop!_OS:
+# Ubuntu / Debian:
 sudo apt update && sudo apt install -y build-essential python3 make g++
 
-# Fedora / RHEL:
+# Fedora:
 sudo dnf groupinstall "Development Tools" && sudo dnf install -y python3
 
-# Arch Linux / Manjaro:
+# Arch Linux:
 sudo pacman -S --needed base-devel python
 ```
 
-#### 🍏 macOS (Intel & Apple Silicon M1/M2/M3/M4)
-Ensure Xcode Command Line Tools are active:
+### 🍏 macOS (Intel & Apple Silicon M1/M2/M3/M4)
 ```bash
 xcode-select --install
 ```
 
-#### 🪟 Windows (10 / 11)
-Run PowerShell as Administrator and verify build tools are installed:
+### 🪟 Windows (10 / 11)
+Run PowerShell as Administrator:
 ```powershell
-# Option 1 (Winget - Recommended):
 winget install Microsoft.VisualStudio.2022.BuildTools --override "--passive --config DesktopCpp"
-
-# Option 2 (via npm in admin PowerShell):
-npm install --global --production windows-build-tools
 ```
 
 ---
 
-### Step-by-Step Installation
-
-#### 1. Clone the repository
-```bash
-git clone https://github.com/BEKFURR/BEK-CLUSTER.git
-cd BEK-CLUSTER
-```
-
-#### 2. Install dependencies
-```bash
-npm install
-```
-> **Note**: Our configured `.npmrc` (`allow-scripts=node-pty`) permits `node-pty` to compile automatically. Our automated postinstall self-healing script (`ensure-pty.js`) verifies and binds the native PTY engine without requiring manual confirmation prompts.
-
-#### 3. Link globally as a system CLI
-Choose either option to make the `bek-cluster` command available in any directory:
-
-```bash
-# Option A: Standard npm link (Recommended for developers)
-npm link
-
-# Option B: Global install from repository source
-npm install -g .
-```
-
-#### 4. Launch in any project
-Navigate to any repository or directory where you want your AI agents to operate, then launch:
-```bash
-cd /path/to/your/project
-bek-cluster
-```
-Your default browser will immediately open `http://127.0.0.1:3888` connected to your workspace.
-
----
-
-### Troubleshooting & Common Fixes
-
-<details>
-<summary><b>1. EACCES / Permission denied during global install on Linux/macOS</b></summary>
-
-Avoid running `sudo npm install -g`. Instead, configure npm's default global directory to your user home:
-```bash
-mkdir -p ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc # or ~/.zshrc
-source ~/.bashrc # or source ~/.zshrc
-npm link
-```
-</details>
-
-<details>
-<summary><b>2. Windows PowerShell script execution policy error</b></summary>
-
-If Windows blocks running `bek-cluster`, run PowerShell as Administrator and enable local scripts:
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-</details>
-
-<details>
-<summary><b>3. Native binding mismatch after Node.js version upgrade</b></summary>
-
-If you switch Node.js versions (e.g. via `nvm`, `mise`, or `fnm`), trigger a clean rebuild:
-```bash
-npm run postinstall
-# or manually:
-npm rebuild node-pty
-```
-</details>
-
----
-
-## CLI Usage & Flags
+## CLI Options
 
 ```text
 Usage: bek-cluster [options]
@@ -179,57 +168,27 @@ Options:
   -h, --help              Display help information
 ```
 
-### Examples
-
-```bash
-# Standard launch:
-bek-cluster
-
-# Run on a custom port:
-bek-cluster -p 4200
-
-# Open targeted project repository:
-bek-cluster -d ~/projects/my-web-app
-
-# Headless server mode (e.g. over SSH port-forwarding):
-bek-cluster --no-open
-```
-
 ---
 
 ## Keyboard Shortcuts
 
-- `Cmd/Ctrl + K`: Toggle floating Spotlight broadcast capsule and focus input
-- `Cmd/Ctrl + 1..6`: Quickly switch focus to window 1 through 6
-- `Arrow Keys` (or `Alt + Arrow`): Smoothly scroll between agents in Vertikal or Gorizontal modes
-- `Mouse Wheel`: Automatically converted to horizontal scrolling in Gorizontal layout
-- `Escape`: Close menus and popover modals
-
----
-
-## Supported Agents
-
-| Agent | Executable | Description |
-|---|---|---|
-| **Claude Code** | `claude` | Anthropic official CLI coding agent |
-| **Antigravity CLI** | `agy` | Google DeepMind Antigravity CLI coding assistant |
-| **Codex CLI** | `codex` | OpenAI terminal assistant |
-| **OpenCode** | `opencode` | Autonomous open-source AI software engineer |
-| **GitHub Copilot** | `copilot` | GitHub Copilot CLI |
-| **Crush CLI** | `crush` | Terminal code assistant |
-| **Pi CLI** | `pi` | Personal AI assistant |
-| **Bash Terminal** | `bash` | Standard Linux/macOS/Git Bash shell session |
-| **PowerShell** | `powershell` / `pwsh` | Windows PowerShell / PowerShell Core session |
-| **Command Prompt** | `cmd` | Windows Command Prompt (`cmd.exe`) session |
-| **Custom Binary** | *custom* | Any command, interpreter, or flags |
+| Shortcut | Action |
+|---|---|
+| `Cmd/Ctrl + B` | Toggle left sidebar collapse / expand |
+| `Cmd/Ctrl + K` | Toggle Spotlight broadcast capsule and focus input |
+| `Cmd/Ctrl + 1..6` | Switch focus directly to window 1 through 6 |
+| `Arrow Keys` / `Alt + Arrow` | Smoothly navigate between agents in Vertikal or Gorizontal modes |
+| `Mouse Wheel` | Horizontal scroll translation in Gorizontal layout |
+| `Escape` | Dismiss active modals, dropdowns, and flyout menus |
 
 ---
 
 ## Architecture
 
-- **Backend**: Node.js, Express, WebSocket (`ws`), `node-pty` pseudo-terminal manager.
-- **Frontend**: Vanilla ES6+, `xterm.js`, `xterm-addon-fit`, `xterm-addon-web-links`, CSS visionOS Glassmorphism design system.
-- **Window Management**: Custom virtual desktop manager supporting freeform dragging, 8-way directional resize handles, z-index elevation, and persistent background execution via CSS minimization.
+- **Backend**: Node.js, Express, WebSocket (`ws`), `node-pty` native pseudo-terminal engine, Pro Orchestration Engine (`src/pro-orchestrator.js`).
+- **Frontend**: Vanilla ES6+, `xterm.js`, `xterm-addon-fit`, `xterm-addon-web-links`, visionOS Glassmorphic design system.
+- **Process Isolation**: Independent PTY terminal instances per sub-agent under a unified project directory context.
+- **Intervention Engine**: Bi-directional directive dispatch enabling human supervision through the Lead Director.
 
 ---
 
