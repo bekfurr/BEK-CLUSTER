@@ -73,6 +73,55 @@ const API = {
       body: JSON.stringify({ prompt, sessionIds, appendNewline: true })
     });
     return res.json();
+  },
+
+  async installAgent(data) {
+    const res = await fetch('/api/agents/install', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async getProStatus(projectId = null) {
+    const url = projectId ? `/api/pro/status?projectId=${encodeURIComponent(projectId)}` : '/api/pro/status';
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async createProProject(data) {
+    const res = await fetch('/api/pro/project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async spawnProWorker(data) {
+    const res = await fetch('/api/pro/worker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async intervenePro(data) {
+    const res = await fetch('/api/pro/intervene', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async closeProProject(id) {
+    const res = await fetch(`/api/pro/project/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    return res.json();
   }
 };
 

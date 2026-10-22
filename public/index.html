@@ -69,12 +69,48 @@
               </svg>
               <span>Custom CLI Command...</span>
             </button>
+            <button class="dropdown-item btn-open-installer-item" id="btnOpenInstallerFromDropdown" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Agent O'rnatish Markazi...</span>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Scrollable Navigation Groups -->
       <div class="sidebar-scrollable">
+        <!-- Cluster Modes (Standard Workspace vs PRO AGENT) -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">KLASTER REJIMI</div>
+          <div class="sidebar-nav-list" role="tablist">
+            <button class="sidebar-nav-item mode-tab-btn active" id="btnModeTerminals" data-mode="terminals" data-tooltip="Klaster Terminallari">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Terminallar</span>
+            </button>
+
+            <button class="sidebar-nav-item mode-tab-btn pro-mode-btn" id="btnModePro" data-mode="pro" data-tooltip="PRO AGENT (Direktor & Bola Agentlar)">
+              <div class="sidebar-nav-icon pro-icon-glow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">PRO AGENT</span>
+              <span class="badge badge-pro-gold">PRO</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Layout Modes -->
         <div class="sidebar-nav-group">
           <div class="sidebar-group-label">KO'RINISHLAR (LAYOUT)</div>
@@ -136,6 +172,19 @@
               </div>
               <span class="sidebar-nav-label">Usage Analytics</span>
               <span class="badge badge-usage sidebar-badge" id="navTotalTokensBadge">0 tkn</span>
+            </button>
+
+            <!-- Agent Installer Hub Button -->
+            <button id="btnOpenInstallerModal" class="sidebar-nav-item installer-toggle" data-tooltip="Agent O'rnatish Markazi">
+              <div class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <span class="sidebar-nav-label">Agent O'rnatish</span>
+              <span class="badge badge-dim" id="installerCountBadge">Hub</span>
             </button>
 
             <!-- Broadcast Toggle Button -->
@@ -251,11 +300,37 @@
               </svg>
               <span>Launch First Agent</span>
             </button>
+            <button class="btn btn-secondary btn-large" id="emptyOpenInstallerBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Agent O'rnatish</span>
+            </button>
+          </div>
+
+          <!-- Notice banner shown when 0 AI agents are detected -->
+          <div id="noAiAgentsNotice" class="no-ai-agents-banner" style="display: none;">
+            <div class="no-ai-banner-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="no-ai-banner-content">
+              <div class="no-ai-banner-title">Kompyuteringizda AI Agentlar o'rnatilmagan</div>
+              <div class="no-ai-banner-desc">BEK CLUSTER to'liq quvvatda ishlashi uchun Claude Code, Antigravity, OpenCode kabi agentlarni o'rnatish tavsiya etiladi.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnBannerOpenInstaller">
+              <span>Agent O'rnatish</span>
+            </button>
           </div>
 
           <div class="detected-agents-section">
             <div class="section-heading-row">
-              <div class="section-heading">AVAILABLE AGENTS</div>
+              <div class="section-heading">O'RNATILGAN AGENTLAR (INSTALLED)</div>
               <span class="section-heading-hint">Scroll horizontally ↔</span>
             </div>
             <div class="agent-cards-grid" id="emptyAgentCards">
@@ -270,6 +345,11 @@
         <!-- Terminal cards will be appended here -->
       </div>
     </main>
+
+    <!-- PRO AGENT WORKSPACE CONTAINER -->
+    <section id="proAgentContainer" class="pro-agent-workspace" style="display: none;">
+      <!-- Dynamically rendered by pro-agent.js -->
+    </section>
 
     <!-- Floating Spotlight Broadcast Bar -->
     <div id="broadcastBar" class="broadcast-floating-bar">
@@ -521,6 +601,84 @@
         </div>
       </div>
     </div>
+
+    <!-- Agent Installer Hub Modal -->
+    <div id="agentInstallerModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content modal-content-lg" role="dialog" aria-modal="true" aria-labelledby="installerModalTitle">
+        <div class="modal-header">
+          <div class="modal-title" id="installerModalTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>AI Agent O'rnatish Markazi (Installer Hub)</span>
+          </div>
+          <button class="modal-close" id="closeInstallerModalBtn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body installer-modal-body">
+          <div class="installer-hero">
+            <div class="installer-hero-text">
+              <h3>Kompyuteringizga yangi AI agentlarni o'rnating</h3>
+              <p>Avtomatik tarzda terminal orqali o'rnatish yoki qadam-baqadam yo'riqnoma bo'yicha qo'lda o'rnatish usullaridan foydalaning.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnRefreshAgentsScan">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span>Qayta Tekshirish</span>
+            </button>
+          </div>
+
+          <!-- Installer Filter Tabs -->
+          <div class="installer-filter-tabs">
+            <button class="installer-tab active" data-filter="all">Barchasi</button>
+            <button class="installer-tab" data-filter="uninstalled">O'rnatilmaganlar</button>
+            <button class="installer-tab" data-filter="installed">O'rnatilganlar</button>
+          </div>
+
+          <!-- Installer Cards List -->
+          <div class="installer-cards-grid" id="installerCardsList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="btnCloseInstallerBottom">Yopish</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Manual Installation Guide Modal -->
+    <div id="agentManualGuideModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content modal-content-md" role="dialog" aria-modal="true" aria-labelledby="manualGuideTitle">
+        <div class="modal-header">
+          <div class="modal-title" id="manualGuideTitle">
+            <span id="manualGuideAgentIcon"></span>
+            <span id="manualGuideAgentName">Qo'lda O'rnatish Yo'riqnomasi</span>
+          </div>
+          <button class="modal-close" id="closeManualGuideModalBtn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body manual-guide-body">
+          <p class="manual-guide-desc">Ushbu buyruqlarni terminalingizda navbatma-navbat bajaring:</p>
+          <div class="manual-steps-list" id="manualStepsContainer">
+            <!-- Steps dynamically rendered -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCloseManualGuideBtn">Tushundim</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Scripts -->
@@ -529,6 +687,7 @@
   <script src="/vendor/xterm/addon-web-links.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/terminal-view.js"></script>
+  <script src="/js/pro-agent.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

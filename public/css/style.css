@@ -2755,6 +2755,985 @@ html, body {
 }
 
 /* ==========================================================================
+   Cluster Mode Switcher (Terminals vs PRO AGENT)
+   ========================================================================== */
+
+.mode-tab-btn.active {
+  background: var(--elevated);
+  border-color: var(--border-strong);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.pro-mode-btn {
+  position: relative;
+  transition: all var(--duration-fast) var(--ease-apple);
+}
+
+.pro-mode-btn:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.pro-mode-btn.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.08));
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.pro-mode-btn.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2.5px;
+  background: #F59E0B;
+  border-radius: 2px;
+}
+
+.pro-icon-glow svg {
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+}
+
+.badge-pro-gold {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #0A0A0B;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  margin-left: auto;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3);
+}
+
+.installer-toggle:hover {
+  background: rgba(167, 139, 250, 0.08);
+  color: #C084FC;
+}
+
+/* ==========================================================================
+   No-AI Agents Onboarding Banner
+   ========================================================================== */
+
+.no-ai-agents-banner {
+  margin: var(--space-4) auto var(--space-5);
+  max-width: 760px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.03));
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: banner-fade-in 300ms var(--ease-apple);
+}
+
+@keyframes banner-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.no-ai-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.no-ai-banner-content {
+  flex: 1;
+}
+
+.no-ai-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FBBF24;
+  margin-bottom: 3px;
+}
+
+.no-ai-banner-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.card-open-installer {
+  cursor: pointer;
+}
+
+/* Modal sizing extension */
+.modal-content-md {
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-select {
+  height: 36px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-apple);
+}
+
+.form-select:focus {
+  border-color: var(--border-strong);
+}
+
+.form-textarea {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  border-color: var(--border-strong);
+}
+
+/* ==========================================================================
+   Agent Installer Hub Modal
+   ========================================================================== */
+
+.installer-modal-body {
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.installer-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), rgba(124, 58, 237, 0.04));
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.installer-hero-text h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.installer-hero-text p {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.installer-filter-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.installer-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-apple);
+}
+
+.installer-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.installer-tab.active {
+  background: var(--elevated);
+  border-color: var(--border-strong);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.installer-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+.installer-agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all var(--duration-fast) var(--ease-apple);
+}
+
+.installer-agent-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.installer-agent-card.card-installed {
+  border-color: rgba(127, 209, 160, 0.2);
+}
+
+.installer-card-top {
+  display: flex;
+  gap: 12px;
+}
+
+.installer-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.installer-card-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.installer-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.installer-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.installer-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.installer-card-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.installer-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.installer-tag {
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-dim);
+}
+
+.installer-tag-role {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.installer-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.btn-installer-launch {
+  background: var(--elevated);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-installer-launch:hover {
+  background: var(--surface);
+  border-color: var(--status-ready);
+}
+
+.btn-installer-auto {
+  background: linear-gradient(135deg, #A855F7, #7C3AED);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #FFF;
+}
+
+.btn-installer-auto:hover {
+  background: linear-gradient(135deg, #B568F8, #8B4DF0);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+.btn-installer-manual {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+/* ==========================================================================
+   Manual Installation Guide Modal
+   ========================================================================== */
+
+.manual-guide-body {
+  padding: var(--space-5);
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.manual-guide-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.manual-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manual-step-item {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.manual-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.18);
+  color: #C084FC;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.manual-step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manual-step-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.manual-step-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.manual-cmd-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+.manual-cmd-code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #7FD1A0;
+  user-select: all;
+  overflow-x: auto;
+}
+
+.btn-copy-cmd {
+  padding: 2px 8px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   PRO AGENT: Hierarchical Multi-Agent Orchestrator Workspace
+   ========================================================================== */
+
+.pro-agent-workspace {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg);
+  position: relative;
+}
+
+/* 1. Project Creation Wizard */
+.pro-wizard-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+.pro-wizard-card {
+  max-width: 640px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(245, 158, 11, 0.08);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-8);
+  animation: modal-enter 240ms var(--ease-apple);
+}
+
+.pro-wizard-header {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.pro-badge-crown {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.4));
+}
+
+.pro-wizard-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.pro-wizard-subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.pro-wizard-subtitle strong {
+  color: #F59E0B;
+}
+
+.pro-wizard-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: left;
+}
+
+.pro-directive-preview {
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 2px;
+}
+
+.directive-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F59E0B;
+  margin-bottom: 8px;
+}
+
+.directive-rules-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+}
+
+.directive-rules-list li {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.directive-rules-list strong {
+  color: var(--text);
+}
+
+.btn-gold-glow {
+  background: linear-gradient(135deg, #F59E0B, #D97706) !important;
+  color: #0A0A0B !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.35) !important;
+}
+
+.btn-gold-glow:hover {
+  background: linear-gradient(135deg, #FBBF24, #F59E0B) !important;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.5) !important;
+}
+
+.pro-wizard-actions {
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 2. Active Pro Dashboard */
+.pro-dashboard {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top Control Bar */
+.pro-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.pro-top-project-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pro-crown-badge {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.pro-project-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pro-project-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.pro-project-dir {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.pro-top-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pro-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.stat-pill-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.stat-pill-val {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.pro-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pro Orchestration Main Body (Lead + Workers Split) */
+.pro-orchestration-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(420px, 48%) 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .pro-orchestration-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
+
+/* Director Lead Card */
+.pro-lead-card {
+  background: var(--surface);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.pro-lead-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(0, 0, 0, 0.2));
+  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+  flex-shrink: 0;
+}
+
+.pro-lead-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FBBF24;
+  letter-spacing: 0.02em;
+}
+
+.pro-lead-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.pro-lead-status-pill .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F59E0B;
+  box-shadow: 0 0 6px #F59E0B;
+}
+
+.pro-lead-terminal-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #000;
+}
+
+/* Embedded Terminal within Pro Cards */
+.terminal-card.pro-embedded-card {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.pro-embedded-card .card-header {
+  display: none !important;
+}
+
+/* Sub-Agents Workers Card */
+.pro-workers-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pro-workers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--elevated);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pro-workers-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.workers-count-tag {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  color: var(--text-dim);
+}
+
+.pro-workers-grid {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.pro-workers-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+
+.workers-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.pro-workers-empty h4 {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.pro-workers-empty p {
+  font-size: 12px;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+/* Individual Worker Pane */
+.pro-worker-pane {
+  background: #0A0A0B;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 240px;
+}
+
+.pro-worker-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 11px;
+}
+
+.worker-pane-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.worker-pane-name {
+  color: var(--text);
+}
+
+.worker-pane-role {
+  background: rgba(167, 139, 250, 0.15);
+  color: #C084FC;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.worker-pane-task {
+  font-size: 10px;
+  color: var(--text-muted);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pro-worker-term-slot {
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+
+/* 3. Human-in-the-Loop Intervention Bar */
+.pro-intervention-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(18, 18, 20, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(232, 192, 125, 0.25);
+  flex-shrink: 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.intervention-prefix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.intervention-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.intervention-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.intervention-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #E8C07D;
+  letter-spacing: 0.04em;
+}
+
+.intervention-desc {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.intervention-target-wrap {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.intervention-target-wrap select {
+  font-size: 11px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+  width: 100%;
+}
+
+.intervention-input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.intervention-input-wrap input {
+  width: 100%;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  outline: none;
+  transition: all var(--duration-fast) var(--ease-apple);
+}
+
+.intervention-input-wrap input:focus {
+  border-color: #E8C07D;
+  box-shadow: 0 0 10px rgba(232, 192, 125, 0.2);
+}
+
+.intervention-actions {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
    Accessibility & Reduced Motion
    ========================================================================== */
 

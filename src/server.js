@@ -4,6 +4,7 @@ const path = require('path');
 const os = require('os');
 const { detectAgents, getAgentProfile, getDefaultShellAgentId } = require('./agents');
 const TerminalManager = require('./terminal-manager');
+const ProOrchestrator = require('./pro-orchestrator');
 const { setupWebSocketServer } = require('./websocket');
 const usageManager = require('./usage-manager');
 
@@ -13,6 +14,7 @@ function createServer(options = {}) {
   const app = express();
   const httpServer = http.createServer(app);
   const terminalManager = new TerminalManager(cwd);
+  const proOrchestrator = new ProOrchestrator(terminalManager, cwd);
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -47,6 +49,58 @@ function createServer(options = {}) {
       const agents = detectAgents();
       res.json({ agents });
     } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Install agent endpoint (spawns install terminal or returns guide)
+   */
+  app.post('/api/agents/install', (req, res) => {
+    try {
+      const { agentId, method = 'auto' } = req.body;
+      const profile = getAgentProfile(agentId);
+      if (!profile) {
+        return res.status(404).json({ error: 'Agent profili topilmadi' });
+      }
+
+      if (method === 'manual') {
+        return res.json({
+          success: true,
+          method: 'manual',
+          agent: profile,
+          guide: profile.install ? profile.install.guide : []
+        });
+      }
+
+      // Auto install via live terminal session
+      if (!profile.install || !profile.install.autoCmd) {
+        return res.status(400).json({
+          error: "Ushbu agent uchun avtomatik o'rnatish buyrug'i topilmadi. Qo'lda o'rnatish yo'riqnomasidan foydalaning."
+        });
+      }
+
+      const isWindows = process.platform === 'win32';
+      const shellCmd = isWindows ? 'cmd.exe' : 'bash';
+      const shellArgs = isWindows
+        ? ['/c', `${profile.install.autoCmd} && echo. && echo [OK] O'rnatish yakunlandi! && pause`]
+        : ['-c', `${profile.install.autoCmd} && echo "" && echo "✅ [OK] ${profile.name} muvaffaqiyatli o'rnatildi!" || echo "❌ Xatolik yuz berdi"; exec bash`];
+
+      const session = terminalManager.createSession({
+        agentId: getDefaultShellAgentId(),
+        customCommand: shellCmd,
+        customArgs: shellArgs,
+        customName: `📦 O'rnatish: ${profile.name}`
+      });
+
+      res.status(201).json({
+        success: true,
+        method: 'auto',
+        agent: profile,
+        session
+      });
+    } catch (err) {
+      console.error('[API] Agent install error:', err);
       res.status(500).json({ error: err.message });
     }
   });
@@ -171,6 +225,86 @@ function createServer(options = {}) {
   app.post('/api/usage/reset', (req, res) => {
     usageManager.reset();
     res.json({ success: true, summary: usageManager.getSummary() });
+  });
+
+  // --- PRO AGENT ORCHESTRATION ROUTES ---
+
+  /**
+   * Get current Pro Agent Project status
+   */
+  app.get('/api/pro/status', (req, res) => {
+    try {
+      const project = proOrchestrator.getProject(req.query.projectId);
+      const allProjects = proOrchestrator.listProjects();
+      const availableAgents = proOrchestrator.getAvailableAgentsKnowledge();
+      res.json({
+        activeProject: project,
+        projects: allProjects,
+        availableAgents
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Create a new Pro Project with Lead (OTA) Agent
+   */
+  app.post('/api/pro/project', (req, res) => {
+    try {
+      const { name, customCwd, leadAgentId } = req.body;
+      const project = proOrchestrator.createProject({
+        name,
+        customCwd,
+        leadAgentId
+      });
+      res.status(201).json({ success: true, project });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Spawn a Worker sub-agent under a Pro Project
+   */
+  app.post('/api/pro/worker', (req, res) => {
+    try {
+      const { projectId, agentId, role, taskTitle, initialPrompt } = req.body;
+      const result = proOrchestrator.spawnWorker(projectId, {
+        agentId,
+        role,
+        taskTitle,
+        initialPrompt
+      });
+      res.status(201).json({ success: true, ...result });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Human-in-the-loop intervention (correct worker through lead agent)
+   */
+  app.post('/api/pro/intervene', (req, res) => {
+    try {
+      const { projectId, workerId, feedbackMessage, directWorker } = req.body;
+      const result = proOrchestrator.intervene(projectId, {
+        workerId,
+        feedbackMessage,
+        directWorker
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Close Pro Project
+   */
+  app.delete('/api/pro/project/:id', (req, res) => {
+    const success = proOrchestrator.closeProject(req.params.id);
+    res.json({ success });
   });
 
   // Attach WebSocket server

@@ -86,7 +86,28 @@
     switchDirForm: document.getElementById('switchDirForm'),
     switchDirSessionId: document.getElementById('switchDirSessionId'),
     switchDirAgentName: document.getElementById('switchDirAgentName'),
-    switchDirInput: document.getElementById('switchDirInput')
+    switchDirInput: document.getElementById('switchDirInput'),
+
+    // Installer Hub Elements
+    btnOpenInstallerModal: document.getElementById('btnOpenInstallerModal'),
+    btnOpenInstallerFromDropdown: document.getElementById('btnOpenInstallerFromDropdown'),
+    btnBannerOpenInstaller: document.getElementById('btnBannerOpenInstaller'),
+    emptyOpenInstallerBtn: document.getElementById('emptyOpenInstallerBtn'),
+    noAiAgentsNotice: document.getElementById('noAiAgentsNotice'),
+    installerCountBadge: document.getElementById('installerCountBadge'),
+    agentInstallerModal: document.getElementById('agentInstallerModal'),
+    closeInstallerModalBtn: document.getElementById('closeInstallerModalBtn'),
+    btnCloseInstallerBottom: document.getElementById('btnCloseInstallerBottom'),
+    installerCardsList: document.getElementById('installerCardsList'),
+    btnRefreshAgentsScan: document.getElementById('btnRefreshAgentsScan'),
+
+    // Manual Guide Elements
+    agentManualGuideModal: document.getElementById('agentManualGuideModal'),
+    manualGuideAgentIcon: document.getElementById('manualGuideAgentIcon'),
+    manualGuideAgentName: document.getElementById('manualGuideAgentName'),
+    closeManualGuideModalBtn: document.getElementById('closeManualGuideModalBtn'),
+    btnCloseManualGuideBtn: document.getElementById('btnCloseManualGuideBtn'),
+    manualStepsContainer: document.getElementById('manualStepsContainer')
   };
 
   /**
@@ -106,6 +127,22 @@
     setInterval(() => loadUsageSummary(), 10000);
     setLayout(state.activeLayout);
     updateUIState();
+
+    // Check URL query parameters for direct views/modals
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'pro') {
+      const btnPro = document.getElementById('btnModePro');
+      if (btnPro) btnPro.click();
+    }
+    if (urlParams.get('modal') === 'installer') {
+      openInstallerModal();
+    } else if (urlParams.get('modal') === 'manual') {
+      const agentId = urlParams.get('agent') || 'claude';
+      openManualGuide(agentId);
+    }
+    if (urlParams.has('empty-ai') && elements.noAiAgentsNotice) {
+      elements.noAiAgentsNotice.style.display = 'flex';
+    }
   }
 
   /**
@@ -319,39 +356,446 @@
   }
 
   /**
+   * Update Installer Badge Count
+   */
+  function updateInstallerBadge() {
+    if (!elements.installerCountBadge) return;
+    const installedAiCount = state.detectedAgents.filter(a => a.category === 'ai-agent' && a.isInstalled).length;
+    if (installedAiCount > 0) {
+      elements.installerCountBadge.textContent = `${installedAiCount} ta`;
+      elements.installerCountBadge.className = 'badge badge-ready';
+    } else {
+      elements.installerCountBadge.textContent = '0 ta';
+      elements.installerCountBadge.className = 'badge badge-dim';
+    }
+  }
+
+  /**
+   * Open Installer Hub Modal
+   */
+  function openInstallerModal() {
+    if (!elements.agentInstallerModal) return;
+    elements.agentInstallerModal.style.display = 'flex';
+    renderInstallerCards('all');
+  }
+
+  function closeInstallerModal() {
+    if (!elements.agentInstallerModal) return;
+    elements.agentInstallerModal.style.display = 'none';
+  }
+
+  /**
+   * Render Installer Cards with Filter Tabs
+   */
+  function renderInstallerCards(filter = 'all') {
+    if (!elements.installerCardsList) return;
+    elements.installerCardsList.innerHTML = '';
+
+    document.querySelectorAll('.installer-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.filter === filter);
+    });
+
+    let agents = state.detectedAgents.filter(a => a.category === 'ai-agent');
+    if (filter === 'installed') {
+      agents = agents.filter(a => a.isInstalled);
+    } else if (filter === 'uninstalled') {
+      agents = agents.filter(a => !a.isInstalled);
+    }
+
+    if (agents.length === 0) {
+      elements.installerCardsList.innerHTML = `
+        <div class="installer-cards-empty">
+          <p>Ushbu filtr bo'yicha agentlar topilmadi</p>
+        </div>
+      `;
+      return;
+    }
+
+    agents.forEach(agent => {
+      const card = document.createElement('div');
+      card.className = `installer-agent-card ${agent.isInstalled ? 'card-installed' : 'card-uninstalled'}`;
+      card.innerHTML = `
+        <div class="installer-card-top">
+          <div class="installer-card-icon" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
+            ${agent.icon || ''}
+          </div>
+          <div class="installer-card-info">
+            <div class="installer-card-title-row">
+              <strong class="installer-card-name">${agent.name}</strong>
+              <span class="badge ${agent.isInstalled ? 'badge-ready' : 'badge-dim'}">
+                ${agent.isInstalled ? `✓ O'rnatilgan${agent.version ? ` (${agent.version})` : ''}` : 'O\'rnatilmagan'}
+              </span>
+            </div>
+            <div class="installer-card-desc">${agent.description || ''}</div>
+            <div class="installer-card-tags">
+              <span class="installer-tag">${agent.tier === 'lead' ? '👑 OTA (Direktor)' : '🤖 Worker (Bola)'}</span>
+              <span class="installer-tag">${agent.tokenTier || 'Standard'}</span>
+              ${agent.role ? `<span class="installer-tag installer-tag-role" title="${agent.role}">🎯 ${agent.role}</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="installer-card-actions">
+          ${agent.isInstalled ? `
+            <button class="btn btn-primary btn-sm btn-installer-launch" data-agent="${agent.id}">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Ishga tushirish</span>
+            </button>
+          ` : `
+            <button class="btn btn-primary btn-sm btn-installer-auto" data-agent="${agent.id}" title="Terminalda avtomatik o'rnatish">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span>⚡ Avtomatik O'rnatish</span>
+            </button>
+            <button class="btn btn-secondary btn-sm btn-installer-manual" data-agent="${agent.id}" title="Qadam-baqadam ko'rsatmalar">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              <span>📖 Qo'lda O'rnatish</span>
+            </button>
+          `}
+        </div>
+      `;
+
+      const launchBtn = card.querySelector('.btn-installer-launch');
+      if (launchBtn) {
+        launchBtn.addEventListener('click', () => {
+          closeInstallerModal();
+          launchAgent(agent.id);
+        });
+      }
+
+      const autoBtn = card.querySelector('.btn-installer-auto');
+      if (autoBtn) {
+        autoBtn.addEventListener('click', () => {
+          installAgentAuto(agent.id);
+        });
+      }
+
+      const manualBtn = card.querySelector('.btn-installer-manual');
+      if (manualBtn) {
+        manualBtn.addEventListener('click', () => {
+          openManualGuide(agent.id);
+        });
+      }
+
+      elements.installerCardsList.appendChild(card);
+    });
+  }
+
+  /**
+   * Auto Install Agent via Live Terminal Session
+   */
+  async function installAgentAuto(agentId) {
+    closeInstallerModal();
+    showToast(`O'rnatish sessiyasi boshlanmoqda...`, 'info');
+
+    try {
+      const res = await window.API.installAgent({ agentId, method: 'auto' });
+      if (res.session) {
+        attachSession(res.session);
+        showToast(`📦 O'rnatish terminali ochildi!`, 'success');
+      } else {
+        alert(res.error || "O'rnatishda xatolik yuz berdi");
+      }
+    } catch (e) {
+      alert('Xatolik: ' + e.message);
+    }
+  }
+
+  /**
+   * Step-by-Step Manual Guide Modal
+   */
+  function openManualGuide(agentId) {
+    const agent = state.detectedAgents.find(a => a.id === agentId);
+    if (!agent || !agent.install || !agent.install.guide) {
+      showToast('Ushbu agent uchun qo\'llanma topilmadi', 'error');
+      return;
+    }
+
+    if (elements.manualGuideAgentName) {
+      elements.manualGuideAgentName.textContent = `${agent.name} - Qo'lda O'rnatish`;
+    }
+    if (elements.manualGuideAgentIcon) {
+      elements.manualGuideAgentIcon.innerHTML = `<span class="agent-icon-badge" style="background: ${agent.gradient}; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">${agent.icon}</span>`;
+    }
+
+    if (elements.manualStepsContainer) {
+      elements.manualStepsContainer.innerHTML = '';
+      agent.install.guide.forEach((step, idx) => {
+        const item = document.createElement('div');
+        item.className = 'manual-step-item';
+        item.innerHTML = `
+          <div class="manual-step-num">${idx + 1}</div>
+          <div class="manual-step-content">
+            <div class="manual-step-title">${step.title}</div>
+            ${step.text ? `<p class="manual-step-text">${step.text}</p>` : ''}
+            ${step.cmd ? `
+              <div class="manual-cmd-box">
+                <code class="manual-cmd-code">${step.cmd}</code>
+                <button class="btn btn-ghost btn-sm btn-copy-cmd" type="button" title="Nusxa olish">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span>Nusxa</span>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        const copyBtn = item.querySelector('.btn-copy-cmd');
+        if (copyBtn && step.cmd) {
+          copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(step.cmd).then(() => {
+              const span = copyBtn.querySelector('span');
+              if (span) span.textContent = 'Olingan!';
+              setTimeout(() => { if (span) span.textContent = 'Nusxa'; }, 1800);
+            }).catch(() => {});
+          });
+        }
+
+        elements.manualStepsContainer.appendChild(item);
+      });
+    }
+
+    if (elements.agentManualGuideModal) {
+      elements.agentManualGuideModal.style.display = 'flex';
+    }
+  }
+
+  function closeManualGuide() {
+    if (elements.agentManualGuideModal) {
+      elements.agentManualGuideModal.style.display = 'none';
+    }
+  }
+
+  /**
+   * Helper to create standard Agent Card in Empty State
+   */
+  function createAgentCardEl(agent) {
+    const card = document.createElement('div');
+    card.className = 'agent-card-item';
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.title = `${agent.name}: ${agent.description || ''}`;
+    card.innerHTML = `
+      <div class="agent-card-icon" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
+        ${agent.icon || ''}
+      </div>
+      <div class="agent-card-content">
+        <div class="agent-card-header-line">
+          <span class="agent-card-name">${agent.name}</span>
+          <span class="agent-installed-badge ${agent.isInstalled ? 'installed' : 'uninstalled'}">
+            ${agent.isInstalled ? (agent.version ? `v${agent.version}` : 'Installed') : 'Custom'}
+          </span>
+        </div>
+        <span class="agent-card-desc">${agent.description || ''}</span>
+      </div>
+      <div class="agent-card-action" title="Launch ${agent.name}">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+      </div>
+    `;
+
+    const triggerLaunch = () => launchAgent(agent.id);
+    card.addEventListener('click', triggerLaunch);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerLaunch();
+      }
+    });
+    return card;
+  }
+
+  /**
+   * Helper to create Custom Agent Card in Empty State
+   */
+  function createCustomAgentCardEl(cAgent) {
+    const card = document.createElement('div');
+    card.className = 'agent-card-item';
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.title = `Custom: ${cAgent.name} (${cAgent.command})`;
+    card.innerHTML = `
+      <div class="agent-card-icon" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.1)); color: #A78BFA;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 17 10 11 4 5"/>
+          <line x1="12" y1="19" x2="20" y2="19"/>
+        </svg>
+      </div>
+      <div class="agent-card-content">
+        <div class="agent-card-header-line">
+          <span class="agent-card-name">${cAgent.name}</span>
+          <span class="agent-installed-badge custom">Custom</span>
+        </div>
+        <span class="agent-card-desc">${cAgent.command}${cAgent.args?.length ? ' ' + cAgent.args.join(' ') : ''}</span>
+      </div>
+      <div class="agent-card-action" title="Launch ${cAgent.name}">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+      </div>
+      <button class="agent-card-delete-btn" type="button" title="Remove custom agent">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    `;
+
+    const triggerLaunch = () => launchAgent(cAgent.command, {
+      command: cAgent.command,
+      args: cAgent.args,
+      name: cAgent.name,
+      cwd: cAgent.cwd
+    });
+
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.agent-card-delete-btn')) return;
+      triggerLaunch();
+    });
+
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerLaunch();
+      }
+    });
+
+    const delBtn = card.querySelector('.agent-card-delete-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', (e) => {
+        deleteCustomAgent(cAgent.id, e);
+      });
+    }
+
+    return card;
+  }
+
+  /**
+   * Helper to create "+ Add Custom Agent" Card
+   */
+  function createAddCustomCardEl() {
+    const addCard = document.createElement('div');
+    addCard.className = 'agent-card-item card-add-custom';
+    addCard.setAttribute('role', 'button');
+    addCard.tabIndex = 0;
+    addCard.title = 'Add a new custom CLI agent to available list';
+    addCard.innerHTML = `
+      <div class="agent-card-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <div class="agent-card-content">
+        <div class="agent-card-header-line">
+          <span class="agent-card-name">Add Custom Agent</span>
+          <span class="agent-installed-badge" style="background: rgba(229, 56, 59, 0.15); color: var(--accent);">+ Add</span>
+        </div>
+        <span class="agent-card-desc">Add any CLI binary or prompt tool</span>
+      </div>
+      <div class="agent-card-action">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14m-7-7 7 7-7 7"/>
+        </svg>
+      </div>
+    `;
+
+    const openAddModal = () => {
+      elements.customAgentModal.style.display = 'flex';
+      elements.customCommandInput.focus();
+    };
+
+    addCard.addEventListener('click', openAddModal);
+    addCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openAddModal();
+      }
+    });
+
+    return addCard;
+  }
+
+  /**
    * Render Launch Menus & Empty State Cards
    */
   function renderAgentMenus() {
-    // 1. Quick Dropdown Menu
+    const installedAiAgents = state.detectedAgents.filter(a => a.category === 'ai-agent' && a.isInstalled);
+    const installedShells = state.detectedAgents.filter(a => a.category === 'shell' && a.isInstalled);
+
+    // 1. Quick Dropdown Menu - Show ONLY installed agents & shells
     if (elements.quickAgentList) {
       elements.quickAgentList.innerHTML = '';
 
-      // Standard detected agents
-      state.detectedAgents.forEach(agent => {
-        const item = document.createElement('button');
-        item.className = 'dropdown-item';
-        item.type = 'button';
-        item.innerHTML = `
-          <span class="agent-icon-badge" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
-            ${agent.icon || ''}
-          </span>
-          <span class="dropdown-item-name">${agent.name}</span>
-          <span class="badge ${agent.isInstalled ? 'badge-ready' : 'badge-dim'}">
-            ${agent.isInstalled ? 'Ready' : 'Not found'}
-          </span>
-        `;
-        item.addEventListener('click', () => {
-          elements.launchDropdown.classList.remove('open');
-          launchAgent(agent.id);
-        });
-        elements.quickAgentList.appendChild(item);
-      });
+      // A. Installed AI Agents
+      if (installedAiAgents.length > 0) {
+        const headerAi = document.createElement('div');
+        headerAi.className = 'dropdown-header';
+        headerAi.textContent = `O'RNATILGAN AI AGENTLAR (${installedAiAgents.length})`;
+        elements.quickAgentList.appendChild(headerAi);
 
-      // User Saved Custom Agents in Dropdown
+        installedAiAgents.forEach(agent => {
+          const item = document.createElement('button');
+          item.className = 'dropdown-item';
+          item.type = 'button';
+          item.innerHTML = `
+            <span class="agent-icon-badge" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
+              ${agent.icon || ''}
+            </span>
+            <span class="dropdown-item-name">${agent.name}</span>
+            <span class="badge badge-ready">
+              ${agent.version ? `v${agent.version}` : 'Ready'}
+            </span>
+          `;
+          item.addEventListener('click', () => {
+            elements.launchDropdown.classList.remove('open');
+            launchAgent(agent.id);
+          });
+          elements.quickAgentList.appendChild(item);
+        });
+      }
+
+      // B. System Shells
+      if (installedShells.length > 0) {
+        const headerShells = document.createElement('div');
+        headerShells.className = 'dropdown-header';
+        headerShells.textContent = 'TIZIM SHELLARI';
+        elements.quickAgentList.appendChild(headerShells);
+
+        installedShells.forEach(agent => {
+          const item = document.createElement('button');
+          item.className = 'dropdown-item';
+          item.type = 'button';
+          item.innerHTML = `
+            <span class="agent-icon-badge" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
+              ${agent.icon || ''}
+            </span>
+            <span class="dropdown-item-name">${agent.name}</span>
+            <span class="badge badge-dim">Shell</span>
+          `;
+          item.addEventListener('click', () => {
+            elements.launchDropdown.classList.remove('open');
+            launchAgent(agent.id);
+          });
+          elements.quickAgentList.appendChild(item);
+        });
+      }
+
+      // C. User Saved Custom Agents in Dropdown
       if (state.customAgents && state.customAgents.length > 0) {
         const sep = document.createElement('div');
         sep.className = 'dropdown-header';
-        sep.textContent = 'SAVED CUSTOM AGENTS';
+        sep.textContent = 'MAXSUS AGENTLAR';
         elements.quickAgentList.appendChild(sep);
 
         state.customAgents.forEach(cAgent => {
@@ -382,155 +826,63 @@
       }
     }
 
-    // 2. Empty State Cards (Horizontal 3-row grid expanding horizontally)
+    // 2. Empty State Cards & Notice Banner
+    if (elements.noAiAgentsNotice) {
+      elements.noAiAgentsNotice.style.display = installedAiAgents.length === 0 ? 'flex' : 'none';
+    }
+
     if (elements.emptyAgentCards) {
       elements.emptyAgentCards.innerHTML = '';
 
-      // A. Standard detected agents
-      state.detectedAgents.forEach(agent => {
-        const card = document.createElement('div');
-        card.className = 'agent-card-item';
-        card.setAttribute('role', 'button');
-        card.tabIndex = 0;
-        card.title = `${agent.name}: ${agent.description || ''}`;
-        card.innerHTML = `
-          <div class="agent-card-icon" style="background: ${agent.gradient || 'rgba(255,255,255,0.06)'}; color: ${agent.color || 'var(--text)'};">
-            ${agent.icon || ''}
-          </div>
-          <div class="agent-card-content">
-            <div class="agent-card-header-line">
-              <span class="agent-card-name">${agent.name}</span>
-              <span class="agent-installed-badge ${agent.isInstalled ? 'installed' : 'uninstalled'}">
-                ${agent.isInstalled ? 'Installed' : 'Custom'}
-              </span>
-            </div>
-            <span class="agent-card-desc">${agent.description || ''}</span>
-          </div>
-          <div class="agent-card-action" title="Launch ${agent.name}">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-          </div>
-        `;
-
-        const triggerLaunch = () => launchAgent(agent.id);
-        card.addEventListener('click', triggerLaunch);
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            triggerLaunch();
-          }
-        });
-
-        elements.emptyAgentCards.appendChild(card);
+      // Render installed AI agents
+      installedAiAgents.forEach(agent => {
+        elements.emptyAgentCards.appendChild(createAgentCardEl(agent));
       });
 
-      // B. User Saved Custom Agents
+      // Render installed Shells
+      installedShells.forEach(agent => {
+        elements.emptyAgentCards.appendChild(createAgentCardEl(agent));
+      });
+
+      // User Saved Custom Agents
       if (state.customAgents && state.customAgents.length > 0) {
         state.customAgents.forEach(cAgent => {
-          const card = document.createElement('div');
-          card.className = 'agent-card-item';
-          card.setAttribute('role', 'button');
-          card.tabIndex = 0;
-          card.title = `Custom: ${cAgent.name} (${cAgent.command})`;
-          card.innerHTML = `
-            <div class="agent-card-icon" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.1)); color: #A78BFA;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="4 17 10 11 4 5"/>
-                <line x1="12" y1="19" x2="20" y2="19"/>
-              </svg>
-            </div>
-            <div class="agent-card-content">
-              <div class="agent-card-header-line">
-                <span class="agent-card-name">${cAgent.name}</span>
-                <span class="agent-installed-badge custom">Custom</span>
-              </div>
-              <span class="agent-card-desc">${cAgent.command}${cAgent.args?.length ? ' ' + cAgent.args.join(' ') : ''}</span>
-            </div>
-            <div class="agent-card-action" title="Launch ${cAgent.name}">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-            </div>
-            <button class="agent-card-delete-btn" type="button" title="Remove custom agent">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          `;
-
-          const triggerLaunch = () => launchAgent(cAgent.command, {
-            command: cAgent.command,
-            args: cAgent.args,
-            name: cAgent.name,
-            cwd: cAgent.cwd
-          });
-
-          card.addEventListener('click', (e) => {
-            if (e.target.closest('.agent-card-delete-btn')) return;
-            triggerLaunch();
-          });
-
-          card.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              triggerLaunch();
-            }
-          });
-
-          const delBtn = card.querySelector('.agent-card-delete-btn');
-          if (delBtn) {
-            delBtn.addEventListener('click', (e) => {
-              deleteCustomAgent(cAgent.id, e);
-            });
-          }
-
-          elements.emptyAgentCards.appendChild(card);
+          elements.emptyAgentCards.appendChild(createCustomAgentCardEl(cAgent));
         });
       }
 
-      // C. "+ Add Custom Agent" Card
-      const addCard = document.createElement('div');
-      addCard.className = 'agent-card-item card-add-custom';
-      addCard.setAttribute('role', 'button');
-      addCard.tabIndex = 0;
-      addCard.title = 'Add a new custom CLI agent to available list';
-      addCard.innerHTML = `
-        <div class="agent-card-icon">
+      // "+ Agent O'rnatish Markazi" card
+      const installCard = document.createElement('div');
+      installCard.className = 'agent-card-item card-open-installer';
+      installCard.setAttribute('role', 'button');
+      installCard.tabIndex = 0;
+      installCard.title = 'AI Agentlarni o\'rnatish markazini ochish';
+      installCard.innerHTML = `
+        <div class="agent-card-icon" style="background: rgba(167, 139, 250, 0.15); color: #A78BFA;">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
         </div>
         <div class="agent-card-content">
           <div class="agent-card-header-line">
-            <span class="agent-card-name">Add Custom Agent</span>
-            <span class="agent-installed-badge" style="background: rgba(229, 56, 59, 0.15); color: var(--accent);">+ Add</span>
+            <span class="agent-card-name">Agent O'rnatish</span>
+            <span class="agent-installed-badge" style="background: rgba(167, 139, 250, 0.15); color: #A78BFA;">Hub</span>
           </div>
-          <span class="agent-card-desc">Add any CLI binary or prompt tool</span>
+          <span class="agent-card-desc">Claude, Antigravity, OpenCode o'rnatish</span>
         </div>
         <div class="agent-card-action">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14m-7-7 7 7-7 7"/>
           </svg>
         </div>
       `;
+      installCard.addEventListener('click', openInstallerModal);
+      elements.emptyAgentCards.appendChild(installCard);
 
-      const openAddModal = () => {
-        elements.customAgentModal.style.display = 'flex';
-        elements.customCommandInput.focus();
-      };
-
-      addCard.addEventListener('click', openAddModal);
-      addCard.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openAddModal();
-        }
-      });
-
-      elements.emptyAgentCards.appendChild(addCard);
+      // "+ Add Custom Agent" Card
+      elements.emptyAgentCards.appendChild(createAddCustomCardEl());
     }
   }
 
@@ -2150,6 +2502,71 @@
       });
     }
 
+    // Installer Hub Modal Listeners
+    if (elements.btnOpenInstallerModal) {
+      elements.btnOpenInstallerModal.addEventListener('click', openInstallerModal);
+    }
+    if (elements.btnOpenInstallerFromDropdown) {
+      elements.btnOpenInstallerFromDropdown.addEventListener('click', () => {
+        elements.launchDropdown.classList.remove('open');
+        openInstallerModal();
+      });
+    }
+    if (elements.btnBannerOpenInstaller) {
+      elements.btnBannerOpenInstaller.addEventListener('click', openInstallerModal);
+    }
+    if (elements.emptyOpenInstallerBtn) {
+      elements.emptyOpenInstallerBtn.addEventListener('click', openInstallerModal);
+    }
+    if (elements.closeInstallerModalBtn) {
+      elements.closeInstallerModalBtn.addEventListener('click', closeInstallerModal);
+    }
+    if (elements.btnCloseInstallerBottom) {
+      elements.btnCloseInstallerBottom.addEventListener('click', closeInstallerModal);
+    }
+    if (elements.agentInstallerModal) {
+      elements.agentInstallerModal.addEventListener('click', (e) => {
+        if (e.target === elements.agentInstallerModal) {
+          closeInstallerModal();
+        }
+      });
+    }
+
+    // Installer Filter Tabs
+    document.querySelectorAll('.installer-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        renderInstallerCards(tab.dataset.filter || 'all');
+      });
+    });
+
+    // Refresh Agents Scan Button
+    if (elements.btnRefreshAgentsScan) {
+      elements.btnRefreshAgentsScan.addEventListener('click', async () => {
+        elements.btnRefreshAgentsScan.classList.add('loading');
+        await loadAgents();
+        renderInstallerCards(document.querySelector('.installer-tab.active')?.dataset.filter || 'all');
+        setTimeout(() => {
+          elements.btnRefreshAgentsScan.classList.remove('loading');
+          showToast('Klaster agentlar ro\'yxati yangilandi', 'success');
+        }, 400);
+      });
+    }
+
+    // Manual Guide Modal Listeners
+    if (elements.closeManualGuideModalBtn) {
+      elements.closeManualGuideModalBtn.addEventListener('click', closeManualGuide);
+    }
+    if (elements.btnCloseManualGuideBtn) {
+      elements.btnCloseManualGuideBtn.addEventListener('click', closeManualGuide);
+    }
+    if (elements.agentManualGuideModal) {
+      elements.agentManualGuideModal.addEventListener('click', (e) => {
+        if (e.target === elements.agentManualGuideModal) {
+          closeManualGuide();
+        }
+      });
+    }
+
     // Horizontal wheel navigation on Empty State cards
     if (elements.emptyAgentCards) {
       elements.emptyAgentCards.addEventListener('wheel', (e) => {
@@ -2235,6 +2652,13 @@
       setTimeout(() => toast.remove(), 260);
     }, 2400);
   }
+
+  // Export shared utilities to window for PRO AGENT and modals
+  window.appState = state;
+  window.attachSession = attachSession;
+  window.launchAgent = launchAgent;
+  window.showToast = showToast;
+  window.openInstallerModal = openInstallerModal;
 
   // Run on page load
   window.addEventListener('DOMContentLoaded', init);
