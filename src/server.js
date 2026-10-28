@@ -252,11 +252,12 @@ function createServer(options = {}) {
    */
   app.post('/api/pro/project', (req, res) => {
     try {
-      const { name, customCwd, leadAgentId } = req.body;
+      const { name, customCwd, leadAgentId, initialPrompt } = req.body;
       const project = proOrchestrator.createProject({
         name,
         customCwd,
-        leadAgentId
+        leadAgentId,
+        initialPrompt
       });
       res.status(201).json({ success: true, project });
     } catch (err) {

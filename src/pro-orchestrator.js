@@ -36,10 +36,14 @@ class ProOrchestrator {
   /**
    * Generate Director Directive Markdown file in the project folder
    */
-  generateDirectorDirective(projectName, projectDir, leadAgentProfile, availableAgents) {
+  generateDirectorDirective(projectName, projectDir, leadAgentProfile, availableAgents, initialPrompt = '') {
     const agentsListMd = availableAgents.map(a =>
       `- **${a.name}** (\`${a.id}\`) [Tier: ${a.tier}, Token: ${a.tokenTier}]\n  Qobiliyati: ${a.role}`
     ).join('\n');
+
+    const promptSection = initialPrompt && initialPrompt.trim()
+      ? `## 🚀 FOYDALANUVCHINING BOSHLANG'ICH TOPSHIRIG'I (INITIAL MISSION):\n${initialPrompt.trim()}\n\n---\n\n## 💡 ISHNI BOSHLASH BO'YICHA BIRINCHI QADAM:\nYuqoridagi foydalanuvchi bergan topshiriqni zudlik bilan tahlil qiling va loyiha arxitekturasini tuzib, ishga kirishing.`
+      : `## 💡 ISHNI BOSHLASH BO'YICHA BIRINCHI QADAM:\nFoydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loyiha bo'yicha birinchi talab yoki texnik topshirig'ini (promtini) qabul qilishga tayyor ekanligingizni ayting.`;
 
     return `# 👑 BEK-CLUSTER PRO AGENT DIRECTIVE
 # LOYIHA DIREKTORI (OTA AGENT) YO'RIQNOMASI
@@ -71,8 +75,7 @@ ${agentsListMd}
 
 ---
 
-## 💡 ISHNI BOSHLASH BO'YICHA BIRINCHI QADAM:
-Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loyiha bo'yicha birinchi talab yoki texnik topshirig'ini (promtini) qabul qilishga tayyor ekanligingizni ayting.
+${promptSection}
 `;
   }
 
@@ -83,7 +86,8 @@ Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loy
     const {
       name,
       customCwd = null,
-      leadAgentId = 'claude'
+      leadAgentId = 'claude',
+      initialPrompt = ''
     } = options;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
@@ -114,7 +118,8 @@ Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loy
       cleanName,
       projectDir,
       leadProfile,
-      availableAgents
+      availableAgents,
+      initialPrompt
     );
     const directiveFilePath = path.join(bekClusterDir, 'DIRECTOR_DIRECTIVE.md');
     fs.writeFileSync(directiveFilePath, directiveContent, 'utf8');
@@ -141,8 +146,13 @@ Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loy
         agentId: leadProfile.id,
         name: leadProfile.name,
         sessionId: leadSession.id,
-        status: 'active'
+        icon: leadProfile.icon,
+        color: leadProfile.color,
+        gradient: leadProfile.gradient,
+        status: 'active',
+        initialPrompt: (initialPrompt || '').trim()
       },
+      leadSession,
       availableAgents,
       workers: [],
       status: 'active',
@@ -155,12 +165,17 @@ Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loy
     // Send initial introduction and directive hint to lead agent session after brief startup
     setTimeout(() => {
       try {
-        const welcomePrompt = `Salom! Siz ushbu "${cleanName}" loyihasining OTA (Boshqaruvchi Direktor) agentisiz. Yo'riqnoma: .bek-cluster/DIRECTOR_DIRECTIVE.md faylida saqlandi. Foydalanuvchi buyrug'ini kutmoqdasiz.\r`;
-        this.terminalManager.write(leadSession.id, welcomePrompt);
+        if (initialPrompt && initialPrompt.trim()) {
+          // Send user's mission directly to lead agent terminal
+          this.terminalManager.write(leadSession.id, `${initialPrompt.trim()}\r`);
+        } else {
+          const welcomePrompt = `Salom! Siz ushbu "${cleanName}" loyihasining OTA (Boshqaruvchi Direktor) agentisiz. Yo'riqnoma: .bek-cluster/DIRECTOR_DIRECTIVE.md faylida saqlandi. Foydalanuvchi buyrug'ini kutmoqdasiz.\r`;
+          this.terminalManager.write(leadSession.id, welcomePrompt);
+        }
       } catch (err) {
         console.warn('[ProOrchestrator] Lead initial write notice error:', err.message);
       }
-    }, 1200);
+    }, 1500);
 
     return project;
   }
@@ -214,6 +229,9 @@ Foydalanuvchiga loyiha boshlanganini xushmuomalalik bilan bildiring va uning loy
       role,
       taskTitle,
       sessionId: session.id,
+      icon: agentProfile.icon,
+      color: agentProfile.color,
+      gradient: agentProfile.gradient,
       tokenTier: agentProfile.tokenTier || 'balanced',
       status: 'working',
       createdAt: new Date().toISOString()

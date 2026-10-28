@@ -29,7 +29,22 @@ Your default browser will immediately open `http://127.0.0.1:3888` connected to 
 
 ---
 
-## What's New in Version 1.1.0
+## What's New in Version 1.2.0
+
+### 👑 PRO AGENT Tree View & Interactive Studio
+- **Interactive Tree Architecture (Shajara Daraxti)**: Visual hierarchical graph featuring animated glowing SVG branches (`proBranchFlow`) linking the OTA Director node to specialized Worker sub-agents.
+- **Floating Tree Controls**: Interactive canvas zoom (60% to 140%) and one-click fit reset.
+- **Real-Time Node Activity & Stream Sniffer**: Tree cards display live detected activities (e.g. `Bash: npm install`, `git commit`, `Fayllar ustida ishlamoqda`, `O'ylayapti...`) and pulsating 4-color status pills.
+- **Interactive Agent Studio Drawer**: Seamless slide-in drawer for inspecting terminal sessions without leaving the tree:
+  - **Live Switcher Tabs**: Instantly switch between OTA Director and Worker terminals inside the studio.
+  - **Direct Command Execution**: Send commands or prompts directly into the active agent terminal.
+  - **Fullscreen Mode**: Toggle full-width terminal inspection with automatic xterm refit.
+  - **In-Studio Intervention**: One-click correction directive sent to the OTA Director.
+- **Project Setup Wizard Initial Mission**: Dedicated prompt input with one-click quick presets (Fullstack E-Commerce, SaaS Landing Page, Audit & Refactor, Backend Microservice) that auto-injects the mission into the Director Directive upon launch.
+
+---
+
+## Features Introduced in Version 1.1.0
 
 ### 👑 PRO AGENT Mode (Hierarchical Lead / Worker Orchestrator)
 Transform individual AI tools into a coordinated autonomous team:
@@ -38,7 +53,7 @@ Transform individual AI tools into a coordinated autonomous team:
 - **Automated Director Directive (`.bek-cluster/DIRECTOR_DIRECTIVE.md`)**: Automatically injected upon launch, equipping the Lead Agent with full architectural authority and a live inventory of all installed worker models.
 - **Intelligent Token Economy Policy**: The Director agent synthesizes incoming user goals, decomposes them into modular milestones, and assigns routine tasks to lightweight/balanced sub-agents while reserving high-intelligence models for core architectural logic.
 - **Worker Sub-Agents Klaster**: Launch specialized sub-agents (Frontend Developer, Backend API, Unit Tester, DevOps) executing in parallel within the shared workspace.
-- **Human-in-the-Loop Intervention Bar**: Monitor execution and intervene at any moment. Instruct the Director agent to redirect or course-correct any sub-agent that makes a mistake or deviates from instructions.
+- **Human-in-the-Loop Intervention**: Monitor execution and intervene at any moment. Instruct the Director agent to redirect or course-correct any sub-agent that makes a mistake or deviates from instructions.
 
 ### 🛠️ Agent Detection & Installer Hub
 - **Strict Host Detection**: Displays only genuinely installed CLI agents on your machine to eliminate interface confusion.

@@ -917,7 +917,7 @@
    * Status Detection & Update (Thinking / Done / Error / Waiting)
    * sariq: o'ylayapti, yashil: bo'ldi, qizil: muammo, ko'k: tasdiqlashni kutyapti
    */
-  function setSessionStatus(sessionId, status) {
+  function setSessionStatus(sessionId, status, activity = null) {
     state.sessionStatuses.set(sessionId, status);
 
     const labels = {
@@ -949,6 +949,15 @@
       if (tooltip && item) {
         tooltip.textContent = `${item.session.agentName} • ${labels[status] || status}`;
       }
+    }
+
+    // Dispatch global event for Pro Agent Tree View
+    try {
+      window.dispatchEvent(new CustomEvent('bek-session-status', {
+        detail: { sessionId, status, activity, label: labels[status] || status }
+      }));
+    } catch (e) {
+      // ignore
     }
   }
 
@@ -1139,16 +1148,35 @@
       onOutput: (chunk) => {
         if (!chunk) return;
 
+        // Extract activity snippet (bash commands, operations, etc.)
+        let detectedActivity = null;
+        try {
+          const cleanChunk = chunk.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, ' ').replace(/\s+/g, ' ');
+          const bashMatch = cleanChunk.match(/(?:bash|exec|run|sh)\s*[:\$]?\s*([a-zA-Z0-9_\-\.\/ ]{3,35})/i);
+          const cmdMatch = cleanChunk.match(/\b(npm|npx|node|git|python|cargo|go|make|docker|curl|cat|grep|edit|write|patch)\s+([a-zA-Z0-9_\-\.\/ ]{2,30})/i);
+          if (bashMatch) {
+            detectedActivity = 'Bash: ' + bashMatch[1].trim();
+          } else if (cmdMatch) {
+            detectedActivity = cmdMatch[1] + ' ' + cmdMatch[2].trim();
+          } else if (/thinking|reasoning|analyzing/i.test(cleanChunk)) {
+            detectedActivity = "O'ylayapti...";
+          } else if (/creating|writing|updating|editing/i.test(cleanChunk)) {
+            detectedActivity = "Fayllar ustida ishlamoqda";
+          }
+        } catch (e) {
+          // ignore
+        }
+
         // Heuristic analysis of stream chunks
         const hasPrompt = /(\?|\[y\/n\]|\(y\/n\)|❯|confirm|allow\?|proceed\?|select|choice:|input:)/i.test(chunk);
         const hasError = /(error:|fatal:|exception:|failed with code)/i.test(chunk);
 
         if (hasError) {
-          setSessionStatus(session.id, 'error');
+          setSessionStatus(session.id, 'error', detectedActivity || "Xatolik yuz berdi");
         } else if (hasPrompt) {
-          setSessionStatus(session.id, 'waiting');
+          setSessionStatus(session.id, 'waiting', detectedActivity || "Ko'rsatmani kutmoqda");
         } else {
-          setSessionStatus(session.id, 'thinking');
+          setSessionStatus(session.id, 'thinking', detectedActivity || "Ishlamoqda...");
         }
 
         // Auto-revert thinking to done after stream goes idle for 1.4s
@@ -1156,7 +1184,7 @@
         statusTimer = setTimeout(() => {
           const current = state.sessionStatuses.get(session.id);
           if (current === 'thinking') {
-            setSessionStatus(session.id, 'done');
+            setSessionStatus(session.id, 'done', "Kutmoqda (Tayyor)");
           }
         }, 1400);
       },
